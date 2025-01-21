@@ -1,0 +1,14 @@
+Retail Perfume Inventory and Sales Management System
+
+including 3 main web:
+    - client web: website for clients
+    - io staff web: website for input/output (import/export) staffs
+    - manage staff web: website for staff to manage products/orders/import stage
+
+naming rule:
+    for any page, the rule must follow:
+        {web for who}__{web purpose/function}
+
+    {web for who} including 'client', 'io_staff', and 'manage_staff'
+    {web purpose/function} is describing that page purpose/functionality
+    space is replaced by '_'
