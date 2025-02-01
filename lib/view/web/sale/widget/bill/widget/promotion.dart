@@ -47,7 +47,7 @@ class _ShippingDialogState extends State<PromotionDialog> {
     });
 
     try {
-      final url = Uri.parse('https://dacntt1-api-server-5uchxlkka-haonguyen9191s-projects.vercel.app/api/giftCodes');
+      final url = Uri.parse('https://dacntt1-api-server-baukpbwdh-haonguyen9191s-projects.vercel.app/api/giftCodes');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

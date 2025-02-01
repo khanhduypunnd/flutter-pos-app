@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import '../../../../../model/product.dart';
+import '../../../../../model/order.dart';
+import '../../../../../model/update_product_quantity.dart';
 import '../../../../../shared/core/theme/colors.dart';
 
 class CartView extends StatefulWidget {
   final String employee;
-
   final Function(double) onTotalPriceChanged;
+  final Function(bool) onProductsUpdated;
+  final Function(List<OrderDetail>, List<UpdateProductQuantity>) onProductsSelected;
 
-  const CartView({super.key, required this.employee, required this.onTotalPriceChanged});
+  const CartView({super.key, required this.employee, required this.onTotalPriceChanged, required this.onProductsUpdated, required this.onProductsSelected});
 
   @override
   State<CartView> createState() => _CartViewState();
@@ -18,13 +21,15 @@ class CartView extends StatefulWidget {
 
 class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<CartView> {
   final List<Product> _allProducts = [];
-  final List<Product> _selectedProducts = [];
-  final TextEditingController _searchController = TextEditingController();
+  final List<Product> selectedProducts = [];
+  final TextEditingController searchController = TextEditingController();
   List<Product> _filteredProducts = [];
   bool _isSearching = false;
   bool isLoading = false;
   int quantity = 1;
+  Map<String, int> productQuantitiesApi = {};
   Map<String, int> productQuantities = {};
+
 
   @override
   void initState() {
@@ -41,7 +46,7 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
     });
 
     try {
-      final url = Uri.parse('https://dacntt1-api-server-5uchxlkka-haonguyen9191s-projects.vercel.app/api/products');
+      final url = Uri.parse('https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/products');
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -79,42 +84,89 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
   void _clearSearch() {
     setState(() {
       _isSearching = false;
-      _searchController.clear();
+      searchController.clear();
       _filteredProducts = _allProducts;
     });
   }
 
+  void _updateSelectedProducts() {
+    widget.onProductsUpdated(selectedProducts.isNotEmpty);
+  }
+
+  void _selectedProductstoNote() {
+    List<OrderDetail> orderDetails = selectedProducts.expand((product) {
+      return product.sizes.asMap().entries.map((entry) {
+        int index = entry.key;
+        String size = entry.value;
+        return OrderDetail(
+          productId: product.id,
+          size: size,
+          quantity: productQuantities['${product.id}_$size'] ?? 1,
+          price: product.sellPrices[index],
+        );
+      }).toList();
+    }).toList();
+
+    List<UpdateProductQuantity> updateQuantity = selectedProducts.expand((product) {
+      return product.sizes.asMap().entries.map((entry) {
+        int index = entry.key;
+        String size = entry.value;
+        String key = '${product.id}_$size';
+        int currentQuantity = productQuantities['${product.id}_$size'] ?? 1;
+        int apiQuantity = product.quantities[index];
+        int quantityDifference = apiQuantity - currentQuantity;
+
+        return UpdateProductQuantity(
+          oid: "",
+          pid: product.id,
+          size: size,
+          newQuantity: quantityDifference.toString(),
+        );
+      }).toList();
+    }).toList();
+
+    widget.onProductsSelected(orderDetails, updateQuantity);
+  }
+
+
+
   void _addToSelectedProducts(Product product) {
-    if (!_selectedProducts.contains(product)) {
+    if (!selectedProducts.contains(product)) {
       setState(() {
-        _selectedProducts.add(product);
+        selectedProducts.add(product);
       });
+      _updateSelectedProducts();
       _calculateTotalPrice();
+      _selectedProductstoNote();
     }
   }
 
   void _removeFromSelectedProducts(Product product) {
     setState(() {
-      _selectedProducts.remove(product);
+      selectedProducts.remove(product);
     });
+    _updateSelectedProducts();
     _calculateTotalPrice();
+    _selectedProductstoNote();
   }
 
   void _clearAllSelectedProducts() {
     setState(() {
-      _selectedProducts.clear();
+      selectedProducts.clear();
     });
+    _updateSelectedProducts();
     _calculateTotalPrice();
+    _selectedProductstoNote();
   }
 
   double _calculateTotalPrice() {
     double total = 0.0;
-    if (_selectedProducts.isEmpty) {
+    if (selectedProducts.isEmpty) {
       widget.onTotalPriceChanged(total);
       return total;
     }
 
-    for (var product in _selectedProducts) {
+    for (var product in selectedProducts) {
       for (int i = 0; i < product.sizes.length; i++) {
         String key = '${product.id}_${product.sizes[i]}';
         int currentQuantity = productQuantities[key] ?? 1;
@@ -157,7 +209,7 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: TextFormField(
-                      controller: _searchController,
+                      controller: searchController,
                       onChanged: _onSearch,
                       decoration: InputDecoration(
                         hintText: "Tìm sản phẩm",
@@ -203,9 +255,9 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                   Expanded(
                     flex: 3,
                     child: ListView.builder(
-                      itemCount: _selectedProducts.length,
+                      itemCount: selectedProducts.length,
                       itemBuilder: (context, index) {
-                        final product = _selectedProducts[index];
+                        final product = selectedProducts[index];
                         return Column(
                           children: List.generate(product.sizes.length, (sizeIndex) {
                             return ListTile(
@@ -226,6 +278,7 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                                           _calculateTotalPrice();
                                         }
                                       });
+                                      _selectedProductstoNote();
                                       _calculateTotalPrice();
                                     },
                                   ),
@@ -242,6 +295,7 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                                           _calculateTotalPrice();
                                         }
                                       });
+                                      _selectedProductstoNote();
                                       _calculateTotalPrice();
                                     },
                                   ),
@@ -256,7 +310,6 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                                       });
                                     },
                                   ),
-
                                 ],
                               ),
                               onTap: () {
@@ -325,10 +378,9 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                                     onTap: quantity > 0
                                         ? () {
                                       setState(() {
-                                        bool isProductExist = _selectedProducts.any((selectedProduct) =>
+                                        bool isProductExist = selectedProducts.any((selectedProduct) =>
                                         selectedProduct.id == product.id &&
                                             selectedProduct.sizes.contains(product.sizes[sizeIndex]));
-
                                         if (!isProductExist) {
                                           final selectedProduct = Product(
                                             id: product.id,
@@ -347,8 +399,10 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                                             averageRating: product.averageRating,
                                             totalReviews: product.totalReviews,
                                           );
-                                          _selectedProducts.add(selectedProduct);
+                                          selectedProducts.add(selectedProduct);
+                                          _updateSelectedProducts();
                                           _calculateTotalPrice();
+                                          _selectedProductstoNote();
                                         }
                                         _clearSearch();
                                       });

@@ -1,10 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../../../../../../../model/order.dart';
-import '../../mobile/order_history/widget/order_detail/order_detail.dart';
-import 'widget/list_order/order_list.dart';
-// import 'widget/order_detail/order_detail.dart';
-import '../../../../shared/core/theme/colors.dart';
+import '../../../../../../../../model/order.dart';
+import '../../../mobile/order_history/widget/order_detail/order_detail.dart';
+import '../chanel_store/widget/list_order/order_list.dart';
+import '../../../../../shared/core/theme/colors.dart';
+
 
 class OrderListView extends StatefulWidget {
   const OrderListView({super.key});
@@ -21,10 +21,10 @@ class _OrderListViewState extends State<OrderListView> {
       id: '#111083',
       sid: 'POS',
       cid: 'MS NHI',
-      from: 'store',
+      channel: 'store',
       paymentMethod: 'Đã thanh toán',
       totalPrice: 4085000,
-      shipping: 30000,
+      deliveryFee: 30000,
       discount: 0.0,
       receivedMoney: 4085000,
       change: 0.0,
@@ -41,10 +41,10 @@ class _OrderListViewState extends State<OrderListView> {
       id: '#111082',
       sid: 'POS',
       cid: 'Hậu',
-      from: 'store',
+      channel: 'store',
       paymentMethod: 'Đã thanh toán',
       totalPrice: 2640000,
-      shipping: 30000,
+      deliveryFee: 30000,
       discount: 0.0,
       receivedMoney: 2640000,
       change: 0.0,
@@ -60,10 +60,10 @@ class _OrderListViewState extends State<OrderListView> {
       id: '#111081',
       sid: 'POS',
       cid: 'CHỊ TRANG',
-      from: 'store',
+      channel: 'store',
       paymentMethod: 'Đã thanh toán',
       totalPrice: 4065000,
-      shipping: 30000,
+      deliveryFee: 30000,
       discount: 0.0,
       receivedMoney: 4065000,
       change: 0.0,
@@ -79,10 +79,10 @@ class _OrderListViewState extends State<OrderListView> {
       id: '#111080',
       sid: 'POS',
       cid: 'CHỊ TÚ',
-      from: 'store',
+      channel: 'store',
       paymentMethod: 'Đã thanh toán',
       totalPrice: 1580000,
-      shipping: 30000,
+      deliveryFee: 30000,
       discount: 0.0,
       receivedMoney: 1580000,
       change: 0.0,
@@ -98,10 +98,10 @@ class _OrderListViewState extends State<OrderListView> {
       id: '#111079',
       sid: 'POS',
       cid: 'CHỊ NHÃ THI',
-      from: 'web',
+      channel: 'web',
       paymentMethod: 'Đã thanh toán',
       totalPrice: 1010000,
-      shipping: 30000,
+      deliveryFee: 30000,
       discount: 0.0,
       receivedMoney: 1010000,
       change: 0.0,

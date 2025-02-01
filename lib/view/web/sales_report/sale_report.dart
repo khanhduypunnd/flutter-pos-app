@@ -6,10 +6,6 @@ import 'widget/chart/line_chart.dart';
 import 'widget/chart/pie_chart.dart';
 import 'widget/chart/bar_chart.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

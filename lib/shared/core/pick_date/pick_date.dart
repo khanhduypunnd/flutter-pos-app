@@ -102,17 +102,17 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
       case 'Tháng này':
         setState(() {
           startDate = DateTime(now.year, now.month, 1);
-          endDate = DateTime(now.year, now.month + 1, 0); // End of the current month
+          endDate = DateTime(now.year, now.month + 1, 0);
         });
         break;
       case 'Tháng trước':
         setState(() {
           startDate = DateTime(now.year, now.month - 1, 1);
-          endDate = DateTime(now.year, now.month, 0); // End of the previous month
+          endDate = DateTime(now.year, now.month, 0);
         });
         break;
       case 'Tùy chỉnh':
-        _showCustomDatePicker(context); // Hiển thị popup tùy chỉnh
+        _showCustomDatePicker(context);
         break;
       default:
         setState(() {
@@ -122,7 +122,6 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
     }
   }
 
-  // Hiển thị popup tùy chỉnh chọn ngày
   Future<void> _showCustomDatePicker(BuildContext context) async {
     showDialog(
       context: context,
@@ -131,11 +130,11 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
         DateTime? tempEndDate;
 
         return AlertDialog(
+          backgroundColor: Colors.white,
           title: const Text('Chọn khoảng thời gian'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Chọn ngày bắt đầu
               ListTile(
                 title: const Text('Chọn ngày bắt đầu'),
                 trailing: IconButton(
@@ -150,7 +149,6 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
                   },
                 ),
               ),
-              // Chọn ngày kết thúc
               ListTile(
                 title: const Text('Chọn ngày kết thúc'),
                 trailing: IconButton(
@@ -172,7 +170,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Hủy'),
+              child: const Text('Hủy', style: TextStyle(color: Colors.red),),
             ),
             TextButton(
               onPressed: () {
@@ -185,7 +183,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Áp dụng'),
+              child: const Text('Áp dụng', style: TextStyle(color: Colors.blueAccent),),
             ),
           ],
         );
@@ -193,13 +191,28 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
     );
   }
 
-  // Chọn một ngày
   Future<DateTime?> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            primaryColor: Colors.blueAccent,
+            hintColor: Colors.blueAccent,
+            colorScheme: const ColorScheme.light(
+              primary: Colors.blueAccent,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: Colors.white,
+          ),
+          child: child!,
+        );
+      },
     );
     return picked;
   }

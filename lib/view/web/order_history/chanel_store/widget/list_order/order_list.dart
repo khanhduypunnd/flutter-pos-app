@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../../../model/order.dart';
-import '../../../../../shared/core/theme/colors.dart';
+import '../../../../../../shared/core/theme/colors.dart';
+import '../../../../../../shared/core/pick_date/pick_date.dart';
 
 class OrderListScreen extends StatefulWidget {
   final Function(Order) onOrderSelected;
@@ -35,6 +36,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Container(
+          width: MediaQuery.of(context).size.width,
+            child: TimeSelection()),
+        SizedBox(height: 10,),
         TextFormField(
           decoration: const InputDecoration(
             labelText: 'Nhập mã đơn, tên khách hàng...',
@@ -60,7 +65,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.blue[50] : Colors.white,
+                    color: isSelected ? Colors.white: Colors.blue[10] ,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected ? Colors.blue : AppColors.titleColor,

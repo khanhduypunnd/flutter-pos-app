@@ -145,7 +145,7 @@ class _CustomerDialogState extends State<CustomerDialog> {
       print('Dữ liệu JSON: ${json.encode(customer)}');
 
 
-      final url = Uri.parse('https://dacntt1-api-server-5uchxlkka-haonguyen9191s-projects.vercel.app/api/customers/register');
+      final url = Uri.parse('https://dacntt1-api-server-baukpbwdh-haonguyen9191s-projects.vercel.app/api/customers/register');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

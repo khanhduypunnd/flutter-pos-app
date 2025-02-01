@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../../../../../../model/product.dart';
 import '../../../../../../../model/order.dart';
-import '../../../../../shared/core/theme/colors.dart';
+import '../../../../../../shared/core/theme/colors.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final Order order;
@@ -21,10 +21,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchProducts(); // Gọi hàm fetch products khi màn hình được khởi tạo
+    _fetchProducts();
   }
 
-  // Hàm tải sản phẩm từ API
   Future<void> _fetchProducts() async {
     setState(() {
       isLoading = true;
@@ -38,7 +37,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
         if (response.statusCode == 200) {
           final productJson = json.decode(response.body);
-          fetchedProducts.add(Product.fromJson(productJson)); // Thêm sản phẩm vào danh sách
+          fetchedProducts.add(Product.fromJson(productJson));
         } else {
           throw Exception('Failed to load product');
         }
@@ -175,7 +174,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   flex: 2,
                   child: ListView(
                     children: isLoading
-                        ? [Center(child: CircularProgressIndicator())]  // Hiển thị loading khi fetch dữ liệu
+                        ? [Center(child: CircularProgressIndicator())]
                         : products.map((product) => _buildProductItem(product)).toList(),
                   ),
                 ),
@@ -186,7 +185,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildPaymentDetail('Tổng tiền hàng', widget.order.totalPrice.toString()),
-                      _buildPaymentDetail('Phí vận chuyển', widget.order.shipping.toString()),
+                      _buildPaymentDetail('Phí vận chuyển', widget.order.deliveryFee.toString()),
                       _buildPaymentDetail('Giảm giá', widget.order.discount.toString()),
                       const SizedBox(height: 8),
                       _buildPaymentDetail('Tổng tiền phải thanh toán', widget.order.receivedMoney.toString(), isBold: true),

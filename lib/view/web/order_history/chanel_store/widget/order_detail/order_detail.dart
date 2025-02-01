@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../model/customer.dart';
-import '../../../../../model/order.dart';
-import '../../../../../model/product.dart';
-import '../../../../../shared/core/theme/colors.dart';
+import '../../../../../../model/customer.dart';
+import '../../../../../../model/order.dart';
+import '../../../../../../model/product.dart';
+import '../../../../../../shared/core/theme/colors.dart';
 import 'dart:math';
+
+import '../../../../../../view_model/sale_history_model.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final Order order;
-  // final List<Customer> customer;
   // final List<Product> products;
 
   const OrderDetailScreen({super.key, required this.order});
@@ -43,7 +44,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final saleHistoryModel = Provider.of<SaleHistoryModel>(context);
 
+    final customer = saleHistoryModel.getCustomerById(widget.order.cid);
+
+    final products = widget.order.orderDetails.map((detail) {
+      final product = saleHistoryModel.getProductById(detail.productId);
+      return ListTile(
+        title: Text(product?.name ?? "Sản phẩm không xác định"),
+        subtitle: Text('Số lượng: ${detail.quantity}, Giá: ${detail.price}đ'),
+      );
+    }).toList();
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: Scaffold(
@@ -91,13 +102,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Khách hàng: ${widget.order.cid}',
+                          'Khách hàng: ${customer?.name}',
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
-                          'SĐT: 0787978268',
+                        Text(
+                          'SĐT: ${customer?.phone}',
                           style: TextStyle(fontSize: 14),
                         ),
                       ],
@@ -117,10 +128,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   itemCount: widget.order.orderDetails.length,
                   itemBuilder: (context, index) {
                     final item = widget.order.orderDetails[index];
+                    final product = saleHistoryModel.getProductById(item.productId);
                     return ListTile(
                       leading: const Icon(Icons.inventory),
-                      title: Text(item.productId),
-                      subtitle: Text('Số lượng: ${item.quantity}'),
+                      title: Text(product?.name ?? "Tên sản phẩm không xác định"),
+                      subtitle: Text('Size: ${item.size} - Số lượng: ${item.quantity}'),
                       trailing: Text('${item.price}đ'),
                     );
                   },
