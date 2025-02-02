@@ -42,7 +42,7 @@ class BarLineChart extends StatelessWidget {
     lineBarsData: lineBarsData,
     minX: 0,
     maxX: 24,
-    maxY: 4000,
+    maxY: 1000,
     minY: 0,
   );
 

@@ -8,8 +8,6 @@ import 'dart:math';
 
 class OrderDetailScreen extends StatefulWidget {
   final Order order;
-  // final List<Customer> customer;
-  // final List<Product> products;
 
   const OrderDetailScreen({super.key, required this.order});
 

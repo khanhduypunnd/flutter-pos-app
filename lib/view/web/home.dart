@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'drawer/drawer.dart';
 import '../../shared/core/theme/colors.dart';
+import 'order_history/chanel_web/order_list_view.dart';
 import 'sale/cart_full_view.dart';
 import 'order_history/chanel_store/order_list_view.dart';
 import 'sales_report/sale_report.dart';
@@ -123,7 +124,9 @@ class _HomeScreenState extends State<HomeWeb> with AutomaticKeepAliveClientMixin
       case 'Bán hàng':
         return CartFullView();
       case 'Tất cả đơn hàng':
-        return OrderListView();
+        return OrderListViewStore();
+      case 'Đơn hàng online':
+        return OrderListViewWeb();
       case 'Báo cáo bán hàng':
         return SaleReport();
       case 'Cài đặt':

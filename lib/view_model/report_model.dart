@@ -1,25 +1,21 @@
 import 'dart:convert';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../model/customer.dart';
 import '../model/order.dart';
 import '../model/product.dart';
 
-class SaleHistoryModel extends ChangeNotifier {
-  List<Order> _listOrdersStore = [];
+class ReportModel extends ChangeNotifier{
+  List<Order> listOrdersStore = [];
   List<Order> _listOrdersWeb = [];
   List<Product> _allProducts = [];
   List<Customer> _customers = [];
   Order? selectedOrder;
   bool _isLoading = false;
-
-  List<Order> get ordersStore => _listOrdersStore;
-  List<Order> get ordersWeb => _listOrdersStore;
-  List<Customer> get customer => _customers;
-  List<Product> get products => _allProducts;
-  bool get isLoading => _isLoading;
 
   Customer? getCustomerById(String cid) {
     return _customers.firstWhere((customer) => customer.id == cid);
@@ -44,7 +40,7 @@ class SaleHistoryModel extends ChangeNotifier {
 
         List<Order> filteredOrders = allOrders.where((order) => order.channel == "store").toList();
         filteredOrders.sort((a, b) => b.date.compareTo(a.date));
-        _listOrdersStore = filteredOrders;
+        listOrdersStore = filteredOrders;
       } else {
         throw Exception('Failed to load orders');
       }
@@ -100,7 +96,7 @@ class SaleHistoryModel extends ChangeNotifier {
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         final products =
-            jsonData.map((data) => Product.fromJson(data)).toList();
+        jsonData.map((data) => Product.fromJson(data)).toList();
 
         _allProducts.clear();
         _allProducts.addAll(products);
@@ -117,89 +113,65 @@ class SaleHistoryModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> fetchCustomers() async {
-    _isLoading = true;
-    try {
-      final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/customers');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        final customer =
-            jsonData.map((data) => Customer.fromJson(data)).toList();
-        _customers.clear();
-        _customers.addAll(customer);
-      } else {
-        throw Exception('Failed to fetch customers: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching customers: $error');
-    } finally {
-      _isLoading = false;
-    }
-    notifyListeners();
+  String formatCurrencyDouble(double amount) {
+    final formatter = NumberFormat("#,###", "vi_VN");
+    return formatter.format(amount);
   }
 
-  void orderFirst(List<Order> orders) {
-    if (orders.isNotEmpty) {
-      selectedOrder = orders.first;
-    }
-    print("Order selected");
-    notifyListeners();
+  String formatCurrencyInt(int amount) {
+    final formatter = NumberFormat("#,###", "vi_VN");
+    return formatter.format(amount);
   }
 
-  void onOrderSelected(Order order) {
-    selectedOrder = order;
-    print("Order selected: ${order.id}");
-    notifyListeners();
+  double get netRevenue {
+    return listOrdersStore.fold(0, (sum, order) => sum + order.totalPrice);
   }
 
-
-  // order from web
-
-  int _status = 0;
-
-  int get status => _status;
-
-
-  void updateStatus(int newStatus) {
-    if (newStatus >= 0 && newStatus <= 5) {
-      _status = newStatus;
-      notifyListeners();
-    }
+  double get totalReceived {
+    return listOrdersStore.fold(0, (sum, order) => sum + order.receivedMoney);
   }
 
-  String get buttonText {
-    switch (_status) {
-      case 0:
-        return 'Nhận đơn';
-      case 1:
-        return 'Chuẩn bị đơn';
-      case 2:
-        return 'Giao hàng';
-      default:
-        return 'Đang xử lí';
-    }
+  double get actualRevenue {
+    return listOrdersStore.fold(0, (sum, order) => sum + order.actualReceived);
+  }
+
+  int get totalOrders {
+    return listOrdersStore.length;
+  }
+
+  int get totalProducts {
+    return listOrdersStore.fold(0, (sum, order) {
+      return sum + order.orderDetails.fold(0, (orderSum, detail) => orderSum + detail.quantity);
+    });
+  }
+
+  List<FlSpot> getNetRevenueSpots() {
+    return _getSpotsByHour((order) => order.totalPrice);
+  }
+
+  List<FlSpot> getCollectedSpots() {
+    return _getSpotsByHour((order) => order.receivedMoney);
+  }
+
+  List<FlSpot> getActualReceivedSpots() {
+    return _getSpotsByHour((order) => order.actualReceived);
   }
 
 
-  Future<void> updateOrderStatus(String orderId, int newStatus) async {
-    int orderIndex = _listOrdersWeb.indexWhere((order) => order.id == orderId);
-    if (orderIndex != -1) {
-      _listOrdersWeb[orderIndex].status = newStatus;
-      // try {
-      //   final url = Uri.parse('https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/orders/$orderId');
-      //   final response = await http.patch(url, body: json.encode({'status': newStatus}));
-      //   if (response.statusCode == 200) {
-      //     notifyListeners();
-      //   } else {
-      //     throw Exception('Failed to update order status');
-      //   }
-      // } catch (error) {
-      //   print('Error updating order status: $error');
-      // }
+  List<FlSpot> _getSpotsByHour(double Function(Order) getValue) {
+    Map<int, double> revenueByHour = {};
+
+    for (int i = 0; i <= 24; i += 6) {
+      revenueByHour[i] = 0;
     }
+
+    for (var order in listOrdersStore) {
+      int hour = order.date.hour;
+
+      revenueByHour[hour] = (revenueByHour[hour] ?? 0) + getValue(order);
+    }
+
+    return revenueByHour.entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value)).toList();
   }
 
 }

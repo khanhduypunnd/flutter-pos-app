@@ -1,39 +1,38 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../../../../../../model/order.dart';
-// import '../../../mobile/order_history/widget/order_detail/order_detail.dart';
 import '../../../../../shared/core/theme/colors.dart';
 
 import '../../../../../view_model/sale_history_model.dart';
 import '../chanel_store/widget/list_order/order_list.dart';
 import '../chanel_store/widget/order_detail/order_detail.dart';
 
-class OrderListView extends StatefulWidget {
-  const OrderListView({super.key});
+class OrderListViewStore extends StatefulWidget {
+  const OrderListViewStore({super.key});
 
   @override
-  State<OrderListView> createState() => _OrderListViewState();
+  State<OrderListViewStore> createState() => _OrderListViewStoreState();
 }
 
-class _OrderListViewState extends State<OrderListView> {
-
+class _OrderListViewStoreState extends State<OrderListViewStore> {
   @override
   Widget build(BuildContext context) {
     final saleHistoryModel = Provider.of<SaleHistoryModel>(context);
 
-    if (saleHistoryModel.orders.isEmpty) {
-      saleHistoryModel.fetchOrders().then((_) {
+    if (saleHistoryModel.ordersStore.isEmpty) {
+      saleHistoryModel.fetchOrdersStore().then((_) {
         saleHistoryModel.fetchCustomers();
         saleHistoryModel.fetchProducts();
-        if (saleHistoryModel.orders.isNotEmpty) {
-          saleHistoryModel.orderFirst(saleHistoryModel.orders);
+        if (saleHistoryModel.ordersStore.isNotEmpty) {
+          saleHistoryModel.orderFirst(saleHistoryModel.ordersStore);
         }
       }).catchError((error) {
-        print("Error fetching orders: $error");
+        if (kDebugMode) {
+          print("Error fetching orders: $error");
+        }
       });
     }
-
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -47,10 +46,10 @@ class _OrderListViewState extends State<OrderListView> {
                   children: [
                     SizedBox(
                       width: 380,
-                      child: OrderListScreen(
+                      child: OrderListScreenStore(
                         onOrderSelected: saleHistoryModel.onOrderSelected,
                         selectedOrder: saleHistoryModel.selectedOrder,
-                        orders: saleHistoryModel.orders,
+                        orders: saleHistoryModel.ordersStore,
                       ),
                     ),
                     Padding(
@@ -72,7 +71,7 @@ class _OrderListViewState extends State<OrderListView> {
                         child: saleHistoryModel.selectedOrder != null
                             ? OrderDetailScreen(
                                 order: saleHistoryModel.selectedOrder!,
-                        )
+                              )
                             : const Center(
                                 child: Text(
                                   'Vui lòng chọn một đơn hàng để xem chi tiết.',

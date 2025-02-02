@@ -3,12 +3,12 @@ import '../../../../../../../model/order.dart';
 import '../../../../../../shared/core/theme/colors.dart';
 import '../../../../../../shared/core/pick_date/pick_date.dart';
 
-class OrderListScreen extends StatefulWidget {
+class OrderListScreenStore extends StatefulWidget {
   final Function(Order) onOrderSelected;
   final Order? selectedOrder;
   final List<Order> orders;
 
-  const OrderListScreen({
+  const OrderListScreenStore({
     super.key,
     required this.onOrderSelected,
     this.selectedOrder,
@@ -16,10 +16,10 @@ class OrderListScreen extends StatefulWidget {
   });
 
   @override
-  State<OrderListScreen> createState() => _OrderListScreenState();
+  State<OrderListScreenStore> createState() => _OrderListScreenStoreState();
 }
 
-class _OrderListScreenState extends State<OrderListScreen> {
+class _OrderListScreenStoreState extends State<OrderListScreenStore> {
   String searchQuery = "";
 
   List<Order> get filteredOrders {
@@ -37,9 +37,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
     return Column(
       children: [
         Container(
-          width: MediaQuery.of(context).size.width,
-            child: TimeSelection()),
-        SizedBox(height: 10,),
+            width: MediaQuery.of(context).size.width, child: TimeSelection()),
+        SizedBox(
+          height: 10,
+        ),
         TextFormField(
           decoration: const InputDecoration(
             labelText: 'Nhập mã đơn, tên khách hàng...',
@@ -65,7 +66,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.white: Colors.blue[10] ,
+                    color: isSelected ? Colors.white : Colors.blue[10],
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected ? Colors.blue : AppColors.titleColor,
@@ -77,15 +78,18 @@ class _OrderListScreenState extends State<OrderListScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(order.date.toString(), style: const TextStyle(fontSize: 15)),
+                          Text(order.date.toString(),
+                              style: const TextStyle(fontSize: 15)),
                           Text(order.id,
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, color: AppColors.titleColor)),
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.titleColor)),
                           Text(order.cid),
                         ],
                       ),
                       const Spacer(),
-                      Text(order.totalPrice.toString(), style: const TextStyle(fontSize: 15)),
+                      Text(order.totalPrice.toString(),
+                          style: const TextStyle(fontSize: 15)),
                     ],
                   ),
                 ),

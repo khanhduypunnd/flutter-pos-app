@@ -13,7 +13,7 @@ class Order {
   final DateTime date;
   final String note;
   final List<OrderDetail> orderDetails;
-  final int status;
+  int status;
 
   Order({
     required this.id,

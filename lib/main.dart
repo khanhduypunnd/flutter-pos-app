@@ -1,4 +1,5 @@
 import 'package:dacntt1_mobile_store/view/mobile/home.dart';
+import 'package:dacntt1_mobile_store/view_model/report_model.dart';
 import 'package:dacntt1_mobile_store/view_model/sale_history_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => SaleHistoryModel()),
+        ChangeNotifierProvider(create: (context) => ReportModel()),
       ],
       // create: (context) => AppState(),
       child: MyApp(),

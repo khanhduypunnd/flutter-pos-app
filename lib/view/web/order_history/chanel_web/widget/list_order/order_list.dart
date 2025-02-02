@@ -3,12 +3,12 @@ import '../../../../../../../model/order.dart';
 import '../../../../../../shared/core/theme/colors.dart';
 import '../../../../../../shared/core/pick_date/pick_date.dart';
 
-class OrderListScreen extends StatefulWidget {
+class OrderListScreenWeb extends StatefulWidget {
   final Function(Order) onOrderSelected;
   final Order? selectedOrder;
   final List<Order> orders;
 
-  const OrderListScreen({
+  const OrderListScreenWeb({
     super.key,
     required this.onOrderSelected,
     this.selectedOrder,
@@ -16,11 +16,14 @@ class OrderListScreen extends StatefulWidget {
   });
 
   @override
-  State<OrderListScreen> createState() => _OrderListScreenState();
+  State<OrderListScreenWeb> createState() => _OrderListScreenWebState();
 }
 
-class _OrderListScreenState extends State<OrderListScreen> {
+class _OrderListScreenWebState extends State<OrderListScreenWeb> {
+  late double maxWidth;
+
   String searchQuery = "";
+  String dropdownValue = 'Đơn hàng mới';
 
   List<Order> get filteredOrders {
     if (searchQuery.isEmpty) {
@@ -33,12 +36,62 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    maxWidth = MediaQuery.of(context).size.width;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Container(
-          width: MediaQuery.of(context).size.width,
-            child: TimeSelection()),
+          width: maxWidth,
+          padding: EdgeInsets.all(5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: DropdownButton<String>(
+            value: dropdownValue,
+            elevation: 16,
+            style: TextStyle(color: Colors.blueAccent),
+            dropdownColor: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            underline: Container(
+              height: 0,
+            ),
+            itemHeight: 48,
+            isExpanded: true,
+            onChanged: (String? newValue) {
+              setState(() {
+                dropdownValue = newValue!;
+              });
+            },
+            items: <String>[
+              'Đơn hàng mới',
+              'Đơn đã nhận',
+              'Đơn đang chuẩn bị',
+              'Đơn đang giao',
+              'Đơn đã giao',
+              'Đơn đã hủy'
+            ].map<DropdownMenuItem<String>>((String value) {
+              return DropdownMenuItem<String>(
+                value: value,
+                child: Text(value, style: TextStyle(color: AppColors.subtitleColor, fontSize: 15)),
+              );
+            }).toList(),
+          ),
+        ),
         SizedBox(height: 10,),
         TextFormField(
           decoration: const InputDecoration(
@@ -77,15 +130,18 @@ class _OrderListScreenState extends State<OrderListScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(order.date.toString(), style: const TextStyle(fontSize: 15)),
+                          Text(order.date.toString(),
+                              style: const TextStyle(fontSize: 15)),
                           Text(order.id,
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, color: AppColors.titleColor)),
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.titleColor)),
                           Text(order.cid),
                         ],
                       ),
                       const Spacer(),
-                      Text(order.totalPrice.toString(), style: const TextStyle(fontSize: 15)),
+                      Text(order.totalPrice.toString(),
+                          style: const TextStyle(fontSize: 15)),
                     ],
                   ),
                 ),

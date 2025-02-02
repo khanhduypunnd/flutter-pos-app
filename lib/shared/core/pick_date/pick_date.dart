@@ -52,7 +52,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
         child: DropdownButton<String>(
           value: selectedDate,
           elevation: 16,
-          style: const TextStyle(color: Colors.deepPurple),
+          style: const TextStyle(color: Colors.blueAccent),
           underline: Container(
             height: 0,
           ),

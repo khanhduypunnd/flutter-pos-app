@@ -31,6 +31,11 @@ class DrawerMenu extends StatelessWidget {
             ),
             _buildDrawerItem(
               context,
+              title: 'Đơn hàng online',
+              icon: Icons.web_outlined,
+            ),
+            _buildDrawerItem(
+              context,
               title: 'Báo cáo bán hàng',
               icon: Icons.insert_chart_outlined,
             ),
