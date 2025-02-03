@@ -9,7 +9,7 @@ import '../model/customer.dart';
 import '../model/order.dart';
 import '../model/product.dart';
 
-class ReportModel extends ChangeNotifier{
+class ReportModel extends ChangeNotifier {
   List<Order> listOrdersStore = [];
   List<Order> _listOrdersWeb = [];
   List<Product> _allProducts = [];
@@ -36,9 +36,11 @@ class ReportModel extends ChangeNotifier{
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
-        List<Order> allOrders = jsonData.map((data) => Order.fromJson(data)).toList();
+        List<Order> allOrders =
+            jsonData.map((data) => Order.fromJson(data)).toList();
 
-        List<Order> filteredOrders = allOrders.where((order) => order.channel == "store").toList();
+        List<Order> filteredOrders =
+            allOrders.where((order) => order.channel == "store").toList();
         filteredOrders.sort((a, b) => b.date.compareTo(a.date));
         listOrdersStore = filteredOrders;
       } else {
@@ -63,11 +65,13 @@ class ReportModel extends ChangeNotifier{
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
-        List<Order> allOrders = jsonData.map((data) => Order.fromJson(data)).toList();
+        List<Order> allOrders =
+            jsonData.map((data) => Order.fromJson(data)).toList();
 
-        List<Order> filteredOrders = allOrders.where((order) => order.channel == "web").toList();
+        List<Order> filteredOrders =
+            allOrders.where((order) => order.channel == "web").toList();
 
-        if(filteredOrders.length == 0){
+        if (filteredOrders.length == 0) {
           _listOrdersWeb = filteredOrders;
           return;
         }
@@ -96,7 +100,7 @@ class ReportModel extends ChangeNotifier{
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         final products =
-        jsonData.map((data) => Product.fromJson(data)).toList();
+            jsonData.map((data) => Product.fromJson(data)).toList();
 
         _allProducts.clear();
         _allProducts.addAll(products);
@@ -123,6 +127,7 @@ class ReportModel extends ChangeNotifier{
     return formatter.format(amount);
   }
 
+  //line chart
   double get netRevenue {
     return listOrdersStore.fold(0, (sum, order) => sum + order.totalPrice);
   }
@@ -141,7 +146,9 @@ class ReportModel extends ChangeNotifier{
 
   int get totalProducts {
     return listOrdersStore.fold(0, (sum, order) {
-      return sum + order.orderDetails.fold(0, (orderSum, detail) => orderSum + detail.quantity);
+      return sum +
+          order.orderDetails
+              .fold(0, (orderSum, detail) => orderSum + detail.quantity);
     });
   }
 
@@ -157,11 +164,10 @@ class ReportModel extends ChangeNotifier{
     return _getSpotsByHour((order) => order.actualReceived);
   }
 
-
   List<FlSpot> _getSpotsByHour(double Function(Order) getValue) {
     Map<int, double> revenueByHour = {};
 
-    for (int i = 0; i <= 24; i += 6) {
+    for (int i = 0; i <= 24; i++) {
       revenueByHour[i] = 0;
     }
 
@@ -171,7 +177,104 @@ class ReportModel extends ChangeNotifier{
       revenueByHour[hour] = (revenueByHour[hour] ?? 0) + getValue(order);
     }
 
-    return revenueByHour.entries.map((entry) => FlSpot(entry.key.toDouble(), entry.value)).toList();
+    return revenueByHour.entries
+        .map((entry) => FlSpot(entry.key.toDouble(), entry.value))
+        .toList();
   }
+
+  Map<int, double> getOrdersByHour() {
+    Map<int, double> ordersByHour = {};
+
+    for (int i = 0; i < 24; i++) {
+      ordersByHour[i] = 0;
+    }
+
+    for (var order in listOrdersStore) {
+      int hour = order.date.hour;
+      if (ordersByHour.containsKey(hour)) {
+        ordersByHour[hour] = (ordersByHour[hour] ?? 0) + 1;
+      }
+    }
+
+    return ordersByHour;
+  }
+
+  double getMaxY() {
+    double maxNetRevenue = getNetRevenueSpots().isNotEmpty
+        ? getNetRevenueSpots().map((e) => e.y).reduce((a, b) => a > b ? a : b)
+        : 0;
+
+    double maxCollected = getCollectedSpots().isNotEmpty
+        ? getCollectedSpots().map((e) => e.y).reduce((a, b) => a > b ? a : b)
+        : 0;
+
+    double maxActualReceived = getActualReceivedSpots().isNotEmpty
+        ? getActualReceivedSpots()
+            .map((e) => e.y)
+            .reduce((a, b) => a > b ? a : b)
+        : 0;
+
+    double maxY = [maxNetRevenue, maxCollected, maxActualReceived]
+        .reduce((a, b) => a > b ? a : b);
+
+    double scaleFactor = maxY > 1000000 ? 1000000 : (maxY > 1000 ? 1000 : 1);
+    double finalMaxY = (maxY / scaleFactor);
+
+    return finalMaxY;
+  }
+
+  // pie chart
+
+  Map<String, double> getPaymentMethodData() {
+    Map<String, double> paymentData = {};
+
+    for (var order in listOrdersStore) {
+      String method = order.paymentMethod;
+      double amount = order.actualReceived;
+
+      if (paymentData.containsKey(method)) {
+        paymentData[method] = paymentData[method]! + amount;
+      } else {
+        paymentData[method] = amount;
+      }
+    }
+
+    print("📊 Payment Method Data: $paymentData");
+    return paymentData;
+  }
+
+  // bar chart
+
+  Map<String, List<int>> getOrdersAndProductsByHour() // ✅ Đúng kiểu
+  {
+    Map<int, int> ordersByHour = {};
+    Map<int, int> productsByHour = {};
+
+    for (int i = 0; i < 24; i++) {
+      ordersByHour[i] = 0;
+      productsByHour[i] = 0;
+    }
+
+    for (var order in listOrdersStore) {
+      int hour = order.date.hour;
+
+      ordersByHour[hour] = (ordersByHour[hour] ?? 0) + 1;
+
+      // Tính tổng sản phẩm trong từng orderDetail của order
+      for (var detail in order.orderDetails) {
+        productsByHour[hour] =
+            (productsByHour[hour] ?? 0) + detail.quantity;
+      }
+    }
+
+    List<int> ordersList = List.generate(24, (i) => ordersByHour[i] ?? 0);
+    List<int> productsList = List.generate(24, (i) => productsByHour[i] ?? 0);
+
+    return {
+      "orders": ordersList,
+      "products": productsList,
+    };
+  }
+
 
 }

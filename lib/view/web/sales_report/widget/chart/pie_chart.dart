@@ -1,52 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
 import '../../../../../shared/core/theme/colors.dart';
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(body: Center(child: InteractivePieChart())),
-    );
-  }
-}
+import '../../../../../view_model/report_model.dart';
 
 class InteractivePieChart extends StatefulWidget {
-  const InteractivePieChart({super.key});
+  final Map<String, double> data;
+  const InteractivePieChart({super.key, required this.data});
 
   @override
   State<InteractivePieChart> createState() => _InteractivePieChartState();
 }
 
 class _InteractivePieChartState extends State<InteractivePieChart> {
-  final Map<String, double> data = {
-    "Tiền mặt": 15000000,
-    "Chuyển khoản": 10000000,
-    "Momo": 1000,
-    "Visa/Master":2314314,
-    "ZaloPay": 3000000,
-    "VNPay": 1000000,
-  };
-
   int? touchedIndex;
+
+  late double maxWidth;
+
+  
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    maxWidth = MediaQuery.of(context).size.width;
+  }
+  
 
   @override
   Widget build(BuildContext context) {
-    final filteredData = data.entries.where((entry) => entry.value > 0).toMap();
+    final reportModel = Provider.of<ReportModel>(context);
+    
+    final filteredData = widget.data.entries.where((entry) => entry.value > 0).toMap();
     double total = filteredData.values.fold(0, (sum, value) => sum + value);
+
+    bool changeLayout = maxWidth > 750 ;
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Center(
-          child: Row(
+          child: changeLayout ? Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Pie Chart
@@ -103,13 +96,6 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
                           Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
-                              "Đã thu",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text(
                               "Thực nhận",
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
@@ -117,16 +103,12 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
                         ],
                       ),
                       // Table Rows
-                      ...data.entries.where((entry) => entry.value > 0).map((entry) {
+                      ...widget.data.entries.where((entry) => entry.value > 0).map((entry) {
                         return TableRow(
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(entry.key),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text("${entry.value ~/ 2}"),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -140,6 +122,92 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
                 ),
               ),
             ],
+          ) :
+          Container(
+            height: 800,
+            child: Column(
+                children: [
+                  // Pie Chart
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          height: 300,
+                          child: PieChart(
+                            PieChartData(
+                              sections: _buildSections(filteredData, total),
+                              borderData: FlBorderData(show: false),
+                              centerSpaceRadius: 50,
+                              pieTouchData: PieTouchData(
+                                touchCallback: (event, response) {
+                                  setState(() {
+                                    touchedIndex =
+                                        response?.touchedSection?.touchedSectionIndex;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildLegend(filteredData),
+                      ],
+                    ),
+                  ),
+
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      child: Table(
+                        border: TableBorder.all(color: Colors.grey, width: 1),
+                        columnWidths: const {
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(1),
+                          2: FlexColumnWidth(1),
+                        },
+                        children: [
+                          TableRow(
+                            decoration: BoxDecoration(color: Colors.grey[300]),
+                            children: const [
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Text(
+                                  "Phương thức thanh toán",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Text(
+                                  "Thực nhận",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Table Rows
+                          ...widget.data.entries.where((entry) => entry.value > 0).map((entry) {
+                            return TableRow(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(entry.key),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text("${reportModel.formatCurrencyInt(entry.value ~/ 2)}"),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+            ),
           ),
         ),
       ),

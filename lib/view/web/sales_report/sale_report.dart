@@ -24,6 +24,10 @@ class _SaleReportState extends State<SaleReport> {
 
   String selectedTab = 'Bán hàng';
 
+  List<FlSpot> scaleFlSpots(List<FlSpot> spots, double scaleFactor) {
+    return spots.map((spot) => FlSpot(spot.x, spot.y / scaleFactor)).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final reportModel = Provider.of<ReportModel>(context);
@@ -37,6 +41,16 @@ class _SaleReportState extends State<SaleReport> {
         }
       });
     }
+
+    //line chart
+    double scaleFactor = reportModel.getMaxY() > 1000000 ? 1000000 : (reportModel.getMaxY() > 1000 ? 1000 : 1);
+
+
+    //bar chart
+    Map<String, List<int>> ordersAndProducts = reportModel.getOrdersAndProductsByHour();
+
+    List<int> ordersBarChart = ordersAndProducts['orders']!;
+    List<int> productsBarChart = ordersAndProducts['products']!;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
@@ -153,9 +167,9 @@ class _SaleReportState extends State<SaleReport> {
                         horizontal: 20, vertical: 10),
                     height: 500,
                     child:  BarLineChart(
-                      netRevenue: reportModel.getNetRevenueSpots(),
-                      collected: reportModel.getCollectedSpots(),
-                      actualReceived: reportModel.getActualReceivedSpots(),
+                      netRevenue: scaleFlSpots(reportModel.getNetRevenueSpots(), scaleFactor),
+                      collected: scaleFlSpots(reportModel.getCollectedSpots(), scaleFactor),
+                      actualReceived: scaleFlSpots(reportModel.getActualReceivedSpots(), scaleFactor),
                     ),
                   ),
                 ),
@@ -178,7 +192,9 @@ class _SaleReportState extends State<SaleReport> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
                     height: 500,
-                    child: const InteractivePieChart(),
+                    child: InteractivePieChart(
+                        data: reportModel.getPaymentMethodData(),
+                    ),
                   ),
                 ),
               if (selectedTab == 'Đơn hàng và sản phẩm')
@@ -200,59 +216,9 @@ class _SaleReportState extends State<SaleReport> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 10),
                     height: 500,
-                    child: const BarChartWidget(
-                      orders: [
-                        5,
-                        10,
-                        15,
-                        20,
-                        25,
-                        30,
-                        35,
-                        40,
-                        45,
-                        50,
-                        55,
-                        60,
-                        65,
-                        70,
-                        75,
-                        80,
-                        85,
-                        90,
-                        95,
-                        100,
-                        105,
-                        110,
-                        115,
-                        120
-                      ],
-                      products: [
-                        3,
-                        6,
-                        9,
-                        12,
-                        15,
-                        18,
-                        21,
-                        24,
-                        27,
-                        30,
-                        33,
-                        36,
-                        39,
-                        42,
-                        45,
-                        48,
-                        51,
-                        54,
-                        57,
-                        60,
-                        63,
-                        66,
-                        69,
-                        72
-                      ],
+                    child: BarChartWidget(
+                      orders: ordersBarChart,
+                      products: productsBarChart,
                     ),
                   ),
                 ),

@@ -46,7 +46,7 @@ class BarChartWidget extends StatelessWidget {
           touchTooltipData: BarTouchTooltipData(
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                'Thời gian: ${(group.x * interval).toInt()}-${(group.x * interval + interval - 1).toInt()}h\n${rodIndex == 0 ? 'Số lượng đơn: ' : 'Số lượng sản phẩm: '}${rod.toY.toInt()}',
+                'Thời gian: ${(group.x * interval).toInt()}-${(group.x * interval + interval ).toInt()}h\n${rodIndex == 0 ? 'Số lượng đơn: ' : 'Số lượng sản phẩm: '}${rod.toY.toInt()}',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
