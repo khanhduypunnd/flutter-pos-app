@@ -16,23 +16,27 @@ class OrderListViewStore extends StatefulWidget {
 }
 
 class _OrderListViewStoreState extends State<OrderListViewStore> {
+
+  late SaleHistoryModel saleHistoryModel;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      final model = Provider.of<SaleHistoryModel>(context, listen: false);
+      model.fetchOrdersStore().then((_) {
+        model.fetchCustomers();
+        model.fetchProducts();
+        if (model.ordersStore.isNotEmpty) {
+          model.orderFirst(model.ordersStore);
+        }
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final saleHistoryModel = Provider.of<SaleHistoryModel>(context);
-
-    if (saleHistoryModel.ordersStore.isEmpty) {
-      saleHistoryModel.fetchOrdersStore().then((_) {
-        saleHistoryModel.fetchCustomers();
-        saleHistoryModel.fetchProducts();
-        if (saleHistoryModel.ordersStore.isNotEmpty) {
-          saleHistoryModel.orderFirst(saleHistoryModel.ordersStore);
-        }
-      }).catchError((error) {
-        if (kDebugMode) {
-          print("Error fetching orders: $error");
-        }
-      });
-    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
