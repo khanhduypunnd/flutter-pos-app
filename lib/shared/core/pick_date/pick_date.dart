@@ -62,7 +62,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
             });
             _handleDateSelection(newValue!);
           },
-          items: <String>['Hôm nay', 'Hôm qua', '7 ngày trước', '30 ngày trước', 'Tháng này', 'Tháng trước', 'Tùy chỉnh']
+          items: <String>['Hôm nay', 'Hôm qua','Tháng này', 'Tháng trước', 'Tùy chỉnh']
               .map<DropdownMenuItem<String>>((String value) {
             return DropdownMenuItem<String>(
               value: value,

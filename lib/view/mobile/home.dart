@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'drawer/drawer.dart';
@@ -6,23 +9,6 @@ import 'sale/cart_full_view.dart';
 import 'order_history/order_list_view.dart';
 import 'sales_report/sale_report.dart';
 
-
-class MyApp extends StatelessWidget {
-  final GlobalKey<NavigatorState> navigatorKey;
-
-  const MyApp({super.key, required this.navigatorKey});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,
-      home: HomeMobile(
-        navigatorKey: navigatorKey,
-      ),
-    );
-  }
-}
 
 class HomeMobile extends StatefulWidget {
   final GlobalKey<NavigatorState> navigatorKey;
@@ -34,97 +20,80 @@ class HomeMobile extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeMobile> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  String _selectedPage = 'Bán hàng';
-  late double screenWidth;
+  int _selectedIndex = 0;
+  final PageController _pageController = PageController();
+  final NotchBottomBarController _controller = NotchBottomBarController(index: 0);
+
+  final List<Widget> _pages = [
+    CartFullViewMobile(),   // Bán hàng
+    OrderListViewMobile(),   // Tất cả đơn hàng
+    SaleReportMobile(),  // Báo cáo bán hàng
+  ];
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    screenWidth = MediaQuery.of(context).size.width;
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    bool isScreenWide = screenWidth > 500;
-
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor,
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text(
-          _selectedPage.isEmpty ? "Tổng quan" : _selectedPage,
-        ),
-        backgroundColor: AppColors.backgroundColor,
-        leading: isScreenWide
-            ? null
-            : IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            final scaffoldState = _scaffoldKey.currentState;
-            if (scaffoldState != null) {
-              if (scaffoldState.isDrawerOpen) {
-                scaffoldState.closeDrawer();
-              } else {
-                scaffoldState.openDrawer();
-              }
-            }
-            setState(() {});
-          },
-        ),
-      ),
-      drawer: DrawerMenu(
-        selectedPage: _selectedPage,
-        onPageSelected: _onPageSelected,
-      ),
-      body: Row(
+      body: Stack(
         children: [
-          Expanded(
-            child: Navigator(
-              key: widget.navigatorKey,
-              onGenerateRoute: (RouteSettings settings) {
-                return MaterialPageRoute(
-                  builder: (context) => _buildPage(_selectedPage),
-                );
-              },
+          PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: _pages,
+          ),
+          Positioned(
+            bottom: 0,
+            child: ClipRRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: AnimatedNotchBottomBar(
+                    notchBottomBarController: _controller,
+                    kIconSize: 28.0,
+                    kBottomRadius: 20.0,
+                    onTap: (index) {
+                      _pageController.jumpToPage(index);
+                    },
+                    bottomBarItems: const [
+                      BottomBarItem(
+                        inActiveItem: Icon(Icons.shopping_cart_outlined, color: Colors.blueGrey),
+                        activeItem: Icon(Icons.shopping_cart_outlined, color: Colors.blueAccent),
+                        itemLabel: 'Bán hàng',
+                      ),
+                      BottomBarItem(
+                        inActiveItem: Icon(Icons.receipt_long, color: Colors.blueGrey),
+                        activeItem: Icon(Icons.receipt_long, color: Colors.blueAccent),
+                        itemLabel: 'Đơn hàng',
+                      ),
+                      BottomBarItem(
+                        inActiveItem: Icon(Icons.insert_chart_outlined, color: Colors.blueGrey),
+                        activeItem: Icon(Icons.insert_chart_outlined, color: Colors.blueAccent),
+                        itemLabel: 'Báo cáo',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  void _onPageSelected(String page) {
-    setState(() {
-      _selectedPage = page;
-    });
-
-    widget.navigatorKey.currentState!.push(
-      MaterialPageRoute(
-        builder: (context) => _buildPage(page),
-      ),
-    );
-  }
-
-  Widget _buildPage(String page) {
-    if (widget.navigatorKey.currentState?.canPop() ?? false) {
-      widget.navigatorKey.currentState?.pop();
-    }
-    if (kDebugMode) {
-      print(page);
-    }
-
-    switch (page) {
-      case 'Bán hàng':
-        return CartFullView();
-      case 'Tất cả đơn hàng':
-        return OrderListView();
-      case 'Báo cáo bán hàng':
-        return SaleReport();
-      case 'Cài đặt':
-        return Center(child: Text('Cài đặt'));
-      default:
-        return const Center(child: Text("Màn hình không tồn tại"));
-    }
   }
 }

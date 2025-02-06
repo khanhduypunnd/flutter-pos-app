@@ -4,30 +4,14 @@ import 'widget/bill/checkout_view.dart';
 import 'widget/note/note.dart';
 import '../../../shared/core/theme/colors.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class CartFullViewMobile extends StatefulWidget {
+  const CartFullViewMobile({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const CartFullView(),
-    );
-  }
+  State<CartFullViewMobile> createState() => _MainScreenState();
 }
 
-class CartFullView extends StatefulWidget {
-  const CartFullView({super.key});
-
-  @override
-  State<CartFullView> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<CartFullView> {
+class _MainScreenState extends State<CartFullViewMobile> {
   final String employee = 'kduy';
   late double maxWidth;
 
@@ -46,20 +30,15 @@ class _MainScreenState extends State<CartFullView> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Container(
-              height: 750,
-                child: CartView(employee: employee)),
+            Container(height: 750, child: CartView(employee: employee)),
             Container(
               height: 630,
               child: CheckoutView(),
             ),
-
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: ElevatedButton(
-                onPressed: () {
-        
-                },
+                onPressed: () {},
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
@@ -78,7 +57,9 @@ class _MainScreenState extends State<CartFullView> {
                       "Thanh toán",
                       style: TextStyle(fontSize: 18),
                     ),
-                    SizedBox(width: 20,),
+                    SizedBox(
+                      width: 20,
+                    ),
                     Icon(Icons.shopping_cart_outlined),
                   ],
                 ),

@@ -66,7 +66,6 @@ class _CartViewState extends State<CartView> {
     });
   }
 
-  // Hàm xóa bộ lọc tìm kiếm
   void _clearSearch() {
     setState(() {
       _isSearching = false;
@@ -139,34 +138,16 @@ class _CartViewState extends State<CartView> {
                     ),
                   ),
                   const SizedBox(height: 16.0),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Danh sách sản phẩm đã chọn",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: AppColors.titleColor),
-                      ),
-                      ElevatedButton(
-                        onPressed: _clearAllSelectedProducts,
-                        child: const Text("Xóa tất cả"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red, width: 1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        ),
-                      ),
-                    ],
+                  const Text(
+                    "Danh sách sản phẩm đã chọn",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: AppColors.titleColor),
                   ),
                   const Divider(),
-                  // Hiển thị sản phẩm đã lọc từ API
                   isLoading
-                      ? Center(child: CircularProgressIndicator()) // Hiển thị loading khi đang tải
+                      ? Center(child: CircularProgressIndicator())
                       : ListView.builder(
                     itemCount: _filteredProducts.length,
                     itemBuilder: (context, index) {
@@ -199,6 +180,19 @@ class _CartViewState extends State<CartView> {
                         },
                       );
                     },
+                  ),
+                  const Divider(),
+                  ElevatedButton(
+                    onPressed: _clearAllSelectedProducts,
+                    child: const Text("Xóa tất cả"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red, width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
                   ),
                   const Divider(),
                   Container(

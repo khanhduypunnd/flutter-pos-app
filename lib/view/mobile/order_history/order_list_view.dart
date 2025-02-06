@@ -1,19 +1,17 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import '../../../../../../../model/product.dart';
 import 'widget/list_order/order_list.dart';
-import 'widget/order_detail/order_detail.dart';
 import '../../../../shared/core/theme/colors.dart';
 
-class OrderListView extends StatefulWidget {
-  const OrderListView({super.key});
+class OrderListViewMobile extends StatefulWidget {
+  const OrderListViewMobile({super.key});
 
   @override
-  State<OrderListView> createState() => _OrderListViewState();
+  State<OrderListViewMobile> createState() => _OrderListViewMobileState();
 }
 
-class _OrderListViewState extends State<OrderListView> {
+class _OrderListViewMobileState extends State<OrderListViewMobile> {
 
   @override
   Widget build(BuildContext context) {
