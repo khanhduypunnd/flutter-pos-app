@@ -1,5 +1,7 @@
 import 'package:dacntt1_mobile_store/model/product.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../view_model/sale_model.dart';
 import 'widget/cart/cart.dart';
 import 'widget/bill/checkout_view.dart';
 import 'widget/note/note.dart';
@@ -7,20 +9,7 @@ import '../../../shared/core/theme/colors.dart';
 import '../../../../../model/order.dart';
 import '../../../../../model/update_product_quantity.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const CartFullView(),
-    );
-  }
-}
-
 class CartFullView extends StatefulWidget {
-
   const CartFullView({super.key});
 
   @override
@@ -28,22 +17,9 @@ class CartFullView extends StatefulWidget {
 }
 
 class _MainScreenState extends State<CartFullView> {
-  final String employee = 'kduy';
   late double maxWidth;
-  String _sid = '';
-  String _cid = '';
-  String _paymentMethod = '';
-  double _totalAmount = 0.0;
-  double _deliveryFee = 0.0;
-  double _discount = 0.0;
-  double _receivedMoney = 0.0;
-  double _change = 0.0;
-  double _actualReceived = 0.0;
-  List<OrderDetail> _product = [];
-  List<UpdateProductQuantity> _updateQuantity = [];
-  bool _canProceedToPayment1 = false;
-  bool _canProceedToPayment2 = false;
-  bool _clearForm = false;
+
+  final String employee = 'kduy';
 
   @override
   void didChangeDependencies() {
@@ -52,46 +28,9 @@ class _MainScreenState extends State<CartFullView> {
     maxWidth = MediaQuery.of(context).size.width;
   }
 
-  void _updateTotalPrice(double total) {
-    setState(() {
-      _totalAmount = total;
-    });
-  }
-
-  void _selectedProduct(List<OrderDetail> product, List<UpdateProductQuantity> updateQuantity) {
-    setState(() {
-      _product = product;
-      _updateQuantity = updateQuantity;
-    });
-  }
-
-  void _getmoney(String customerId, double deliveryFee, double discount, String paymentMethod, double receivedMoney, double change, double actualReceived){
-    setState(() {
-      _cid = customerId;
-      _deliveryFee = deliveryFee;
-      _discount = discount;
-      _paymentMethod = paymentMethod;
-      _receivedMoney = receivedMoney;
-      _change = change;
-      _actualReceived = actualReceived;
-    });
-  }
-
-  void _updateCanProceedToPayment1(bool hasProducts) {
-    setState(() {
-      _canProceedToPayment1 = hasProducts;
-    });
-  }
-
-  void _updateCanProceedToPayment2(bool receivedMoney) {
-    setState(() {
-      _canProceedToPayment2 = receivedMoney;
-    });
-  }
-
-
   @override
   Widget build(BuildContext context) {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
     bool isChangeLayout = maxWidth > 1200;
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -102,38 +41,34 @@ class _MainScreenState extends State<CartFullView> {
                   flex: 2,
                   child: CartView(
                     employee: employee,
-                    onTotalPriceChanged: _updateTotalPrice,
-                    onProductsUpdated: _updateCanProceedToPayment1,
-                      onProductsSelected: _selectedProduct,
+                    // onTotalPriceChanged: saleViewModel.updateTotalPrice,
+                    // onProductsUpdated: saleViewModel.updateCanProceedToPayment1,
+                    //   onProductsSelected: saleViewModel.selectedProduct,
                   ),
                 ),
                 Expanded(
                   flex: 1,
                   child: Column(
                     children: [
-                      Expanded(
-                          flex: 4,
-                          child: CheckoutView(
-                            totalAmount: _totalAmount,
-                            getMoneyCallback: _getmoney,
-                            onReceivedMoney: _updateCanProceedToPayment2,
-                          )),
+                      Expanded(flex: 4, child: CheckoutView()),
                       Expanded(
                           flex: 1,
                           child: OrderNoteAndButton(
-                              canProceedToPayment1: _canProceedToPayment1,
-                            canProceedToPayment2: _canProceedToPayment2,
+                            canProceedToPayment1:
+                                saleViewModel.canProceedToPayment1,
+                            canProceedToPayment2:
+                                saleViewModel.canProceedToPayment2,
                             sid: employee,
-                            cid: _cid,
-                            paymentMethod: _paymentMethod,
-                            totalPrice: _totalAmount,
-                            deliveryFee: _deliveryFee,
-                            discount: _discount,
-                            receivedMoney: _receivedMoney,
-                            change: _change,
-                            actualReceived: _actualReceived,
-                            orderDetail: _product,
-                            updateQuantity: _updateQuantity,
+                            cid: saleViewModel.cid,
+                            paymentMethod: saleViewModel.paymentMethod,
+                            totalPrice: saleViewModel.totalAmount,
+                            deliveryFee: saleViewModel.deliveryFee,
+                            discount: saleViewModel.discount,
+                            receivedMoney: saleViewModel.receivedMoney,
+                            change: saleViewModel.change,
+                            actualReceived: saleViewModel.actualReceived,
+                            orderDetail: saleViewModel.product,
+                            updateQuantity: saleViewModel.updateQuantity,
                           )),
                     ],
                   ),
@@ -147,34 +82,30 @@ class _MainScreenState extends State<CartFullView> {
                       height: 1000,
                       child: CartView(
                         employee: employee,
-                        onTotalPriceChanged: _updateTotalPrice,
-                        onProductsUpdated: _updateCanProceedToPayment1,
-                          onProductsSelected: _selectedProduct,
+                        // onTotalPriceChanged: saleViewModel.updateTotalPrice,
+                        // onProductsUpdated: saleViewModel.updateCanProceedToPayment1,
+                        //   onProductsSelected: saleViewModel.selectedProduct,
                       )),
                   Container(
                     height: 500,
-                    child: CheckoutView(
-                      totalAmount: _totalAmount,
-                      getMoneyCallback: _getmoney,
-                      onReceivedMoney: _updateCanProceedToPayment2,
-                    ),
+                    child: CheckoutView(),
                   ),
                   Container(
                     height: 200,
                     child: OrderNoteAndButton(
-                        canProceedToPayment1: _canProceedToPayment1,
-                      canProceedToPayment2: _canProceedToPayment2,
+                      canProceedToPayment1: saleViewModel.canProceedToPayment1,
+                      canProceedToPayment2: saleViewModel.canProceedToPayment2,
                       sid: employee,
-                      cid: _cid,
-                      paymentMethod: _paymentMethod,
-                      totalPrice: _totalAmount,
-                      deliveryFee: _deliveryFee,
-                      discount: _discount,
-                      receivedMoney: _receivedMoney,
-                      change: _change,
-                      actualReceived: _actualReceived,
-                      orderDetail: _product,
-                      updateQuantity: _updateQuantity,
+                      cid: saleViewModel.cid,
+                      paymentMethod: saleViewModel.paymentMethod,
+                      totalPrice: saleViewModel.totalAmount,
+                      deliveryFee: saleViewModel.deliveryFee,
+                      discount: saleViewModel.discount,
+                      receivedMoney: saleViewModel.receivedMoney,
+                      change: saleViewModel.change,
+                      actualReceived: saleViewModel.actualReceived,
+                      orderDetail: saleViewModel.product,
+                      updateQuantity: saleViewModel.updateQuantity,
                     ),
                   ),
                 ],

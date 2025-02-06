@@ -46,7 +46,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget build(BuildContext context) {
     final saleHistoryModel = Provider.of<SaleHistoryModel>(context);
 
-    final customer = saleHistoryModel.getCustomerById(widget.order.cid);
+    final customer = widget.order.cid != null ? saleHistoryModel.getCustomerById(widget.order.cid) : null;
 
     final products = widget.order.orderDetails.map((detail) {
       final product = saleHistoryModel.getProductById(detail.productId);

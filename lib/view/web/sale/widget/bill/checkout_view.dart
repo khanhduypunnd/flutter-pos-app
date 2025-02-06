@@ -2,14 +2,12 @@ import 'package:dacntt1_mobile_store/shared/core/core.dart';
 import 'package:dacntt1_mobile_store/view/web/sale/widget/bill/widget/promotion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
+import '../../../../../view_model/sale_model.dart';
 import 'widget/new_customer.dart';
 import 'widget/shipping.dart';
 import '../../../../icon_pictures.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../../../../model/customer.dart';
-import '../provider/ViewState.dart';
 import 'package:provider/provider.dart';
 
 class PaymentMethod {
@@ -19,201 +17,39 @@ class PaymentMethod {
 }
 
 class CheckoutView extends StatefulWidget {
-  final double totalAmount;
-  final Function(String, double, double, String, double, double, double)
-      getMoneyCallback;
-  final Function(bool) onReceivedMoney;
+  // final double totalAmount;
+  // final Function(String, double, double, String, double, double, double)
+  //     getMoneyCallback;
+  // final Function(bool) onReceivedMoney;
   const CheckoutView(
       {super.key,
-      required this.totalAmount,
-      required this.getMoneyCallback,
-      required this.onReceivedMoney});
+      // required this.totalAmount,
+      // required this.getMoneyCallback,
+      // required this.onReceivedMoney
+      });
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
-  final TextEditingController searchController = TextEditingController();
-  final TextEditingController shippingFeeController = TextEditingController(text: "0");
-  final TextEditingController discountController = TextEditingController();
-  final TextEditingController customerPayController = TextEditingController();
-  final TextEditingController totalAmountController = TextEditingController();
-  final TextEditingController totalPayController = TextEditingController();
-  final TextEditingController changeController = TextEditingController();
-  final TextEditingController actualReceivedController = TextEditingController();
-  String selectedPaymentMethod = 'Tiền mặt';
-  String _selectedCustomerName = '';
-  String _selectedCustomerPhone = '';
-  List<Customer> customers = [];
-  List<Customer> _filteredCustomers = [];
-  bool _isSearching = false;
-  bool isLoading = false;
-
-  String customerId = '';
-  double _shippingFee = 0;
-  double _discount = 0;
-  double _customerPay = 0;
-  List<PaymentMethod> _paymentMethods = [PaymentMethod(method: "Tiền mặt")];
 
   @override
   void initState() {
     super.initState();
-    _fetchCustomers();
-    _updateControllers();
-  }
-
-  void _onSearch(String query) {
-    setState(() {
-      _filteredCustomers = customers
-          .where((customer) =>
-              customer.name.toLowerCase().contains(query.toLowerCase()) ||
-              customer.phone.contains(query))
-          .cast<Customer>()
-          .toList();
-      _isSearching = query.isNotEmpty;
-    });
-  }
-
-  void _updateMoney() {
-    widget.getMoneyCallback(
-        customerId,
-        _shippingFee,
-        _discount,
-        selectedPaymentMethod,
-        _customerPay,
-        _calculateChange(),
-        _calculateActualReceived());
-  }
-
-  Future<void> _fetchCustomers() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/customers');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        final customer =
-            jsonData.map((data) => Customer.fromJson(data)).toList();
-        setState(() {
-          customers.clear();
-          customers.addAll(customer);
-        });
-      } else {
-        throw Exception('Failed to fetch customers: ${response.statusCode}');
-      }
-    } catch (error) {
-      print('Error fetching customers: $error');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi tải dữ liệu: $error')),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  void _clearSearch() {
-    setState(() {
-      searchController.clear();
-      _isSearching = false;
-    });
-  }
-
-  void _selectCustomer(Customer customer) {
-    setState(() {
-      customerId = customer.id;
-      _selectedCustomerName = customer.name;
-      _selectedCustomerPhone = customer.phone;
-      _isSearching = false;
-    });
-  }
-
-  void _clearSelection() {
-    setState(() {
-      _isSearching = true;
-      _selectedCustomerName = '';
-      _selectedCustomerPhone = '';
-      searchController.clear();
-    });
-  }
-
-  void _removePaymentMethod(int index) {
-    setState(() {
-      _paymentMethods.removeAt(index);
-    });
-  }
-
-  double _calculateTotalDue() {
-    return widget.totalAmount + _shippingFee - _discount;
-  }
-
-  double _calculateChange() {
-    return _customerPay - _calculateTotalDue();
-  }
-
-  double _calculateActualReceived() {
-    return _customerPay - _calculateChange();
-  }
-
-  void _updateControllers() {
-    totalAmountController.text = formatPrice(widget.totalAmount);
-    totalPayController.text = formatPrice(_calculateTotalDue());
-    changeController.text = formatPrice(_calculateChange());
-    actualReceivedController.text = formatPrice(_calculateActualReceived());
-  }
-
-  void _updateShippingFee(String shippingFee) {
-    setState(() {
-      shippingFeeController.text = shippingFee;
-      _shippingFee =
-          double.tryParse(shippingFee.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-      _updateMoney();
-    });
-  }
-
-  void _updatePromotion(String promotion) {
-    setState(() {
-      discountController.text = promotion;
-      _discount = double.tryParse(promotion) ?? 0;
-      _updateMoney();
-    });
-  }
-
-  String formatPrice(double price) {
-    final format = NumberFormat("#,##0", "en_US");
-    return format.format(price);
-  }
-
-  String _formatCustomerPayInput(String value) {
-    String newValue = value.replaceAll(RegExp(r'[^0-9]'), '');
-    final format = NumberFormat("#,###", "en_US");
-    return format.format(int.tryParse(newValue) ?? 0);
-  }
-
-  void clearAll() {
-    setState(() {
-      shippingFeeController.clear();
-      discountController.clear();
-      customerPayController.clear();
-      selectedPaymentMethod = 'Tiền mặt';
-      _selectedCustomerName = '';
-      _selectedCustomerPhone = '';
-      customerId = '';
+    Future.microtask(() {
+      Provider.of<SaleViewModel>(context, listen: false).fetchCustomers();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    bool checkselectedcustomer = _selectedCustomerName.isNotEmpty;
-    _updateControllers();
-    AppState appState = Provider.of<AppState>(context);
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+
+    saleViewModel.updateControllers();
+
+    bool checkSelectedCustomer = saleViewModel.selectedCustomerName.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: Scaffold(
@@ -239,16 +75,16 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       Expanded(
                         child: TextFormField(
-                          controller: searchController,
-                          onChanged: _onSearch,
-                          readOnly: checkselectedcustomer ? true : false,
+                          controller: saleViewModel.searchCustomerController,
+                          onChanged: saleViewModel.onSearchCustomer,
+                          readOnly: checkSelectedCustomer ? true : false,
                           decoration: InputDecoration(
                             hintText: "Tìm khách hàng",
                             prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _isSearching
+                            suffixIcon: saleViewModel.isCustomerSearching
                                 ? IconButton(
                                     icon: const Icon(Icons.clear),
-                                    onPressed: _clearSearch)
+                                    onPressed: saleViewModel.clearCustomerSearch)
                                 : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -266,7 +102,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                     ],
                   ),
                   const SizedBox(height: 16.0),
-                  if (!_isSearching && _selectedCustomerName.isNotEmpty)
+                  if (!saleViewModel.isCustomerSearching && saleViewModel.selectedCustomerName.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
@@ -279,22 +115,22 @@ class _CheckoutViewState extends State<CheckoutView> {
                             CircleAvatar(
                               backgroundColor: Colors.blueAccent,
                               child: Text(
-                                _selectedCustomerName[0],
+                                saleViewModel.selectedCustomerName[0],
                                 style: const TextStyle(color: Colors.white),
                               ),
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              _selectedCustomerName,
+                              saleViewModel.selectedCustomerName,
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 10),
-                            Text(_selectedCustomerPhone),
+                            Text(saleViewModel.selectedCustomerPhone),
                             const Spacer(),
                             IconButton(
                               icon: const Icon(Icons.close),
-                              onPressed: _clearSelection,
+                              onPressed: saleViewModel.clearSelection,
                             ),
                           ],
                         ),
@@ -308,7 +144,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                         "Tổng tiền hàng",
                         style: TextStyle(fontSize: 20),
                       ),
-                      Text(totalAmountController.text,
+                      Text(saleViewModel.totalAmountController.text,
                           style: const TextStyle(fontSize: 20)),
                     ],
                   ),
@@ -317,8 +153,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          showShipping(context, shippingFeeController,
-                              _updateShippingFee);
+                          showShipping(context, saleViewModel.shippingFeeController, (value) {
+                            saleViewModel.updateShippingFee(value);
+                          });
                         },
                         style: TextButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -330,7 +167,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                             style: TextStyle(
                                 fontSize: 20, color: Colors.blueAccent)),
                       ),
-                      Text(shippingFeeController.text),
+                      Text(saleViewModel.shippingFeeController.text),
                     ],
                   ),
                   Row(
@@ -338,8 +175,8 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          showPromotion(context, discountController,
-                              widget.totalAmount, _updatePromotion);
+                          showPromotion(context, saleViewModel.discountController,
+                              saleViewModel.totalAmount, saleViewModel.updatePromotion);
                         },
                         style: TextButton.styleFrom(
                             shape: RoundedRectangleBorder(
@@ -349,7 +186,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                             style: TextStyle(
                                 fontSize: 20, color: Colors.blueAccent)),
                       ),
-                      Text(discountController.text),
+                      Text(saleViewModel.discountController.text),
                     ],
                   ),
                   const Divider(),
@@ -363,7 +200,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                             fontWeight: FontWeight.bold,
                             color: AppColors.titleColor),
                       ),
-                      Text(totalPayController.text,
+                      Text(saleViewModel.totalPayController.text,
                           style: const TextStyle(fontSize: 20)),
                     ],
                   ),
@@ -372,7 +209,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                       children: [
                         Column(
                           children:
-                              List.generate(_paymentMethods.length, (index) {
+                              List.generate(saleViewModel.paymentMethods.length, (index) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: Row(
@@ -380,7 +217,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                                   Expanded(
                                       child: DropdownButtonFormField<String>(
                                     dropdownColor: Colors.white,
-                                    value: _paymentMethods[index].method,
+                                    value: saleViewModel.paymentMethods[index].method,
                                     items: [
                                       {
                                         "method": "Tiền mặt",
@@ -427,11 +264,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                                         .toList(),
                                     onChanged: (value) {
                                       setState(() {
-                                        _paymentMethods[index] =
-                                            PaymentMethod(method: value!);
-                                        selectedPaymentMethod =
-                                            value.toString();
-                                        _updateMoney();
+                                        saleViewModel.updatePaymentMethod(value!);
                                       });
                                     },
                                     decoration: InputDecoration(
@@ -458,27 +291,26 @@ class _CheckoutViewState extends State<CheckoutView> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: TextFormField(
-                                      controller: customerPayController,
+                                      controller: saleViewModel.customerPayController,
                                       keyboardType: TextInputType.number,
                                       onChanged: (value) {
                                         setState(() {
-                                          // formatPrice(_customerPay =
-                                          //     double.tryParse(value) ?? 0);
-                                          _customerPay =
+                                          saleViewModel.customerPay =
                                               double.tryParse(value) ?? 0;
-                                          _formatCustomerPayInput(
-                                              customerPayController.text);
-                                          _calculateChange();
-                                          _calculateActualReceived();
-                                          _updateMoney();
-                                          widget.onReceivedMoney(
+                                          saleViewModel.formatCustomerPayInput(
+                                              saleViewModel.customerPayController.text);
+                                            saleViewModel.calculateChange();
+                                          saleViewModel.calculateActualReceived();
+                                          saleViewModel.updateActualReceived(value);
+                                          saleViewModel.updateReceivedMoney(value);
+                                          saleViewModel.updateCanProceedToPayment2(
                                               value.isNotEmpty &&
-                                                  _customerPay > 0);
+                                                  saleViewModel.customerPay > 0);
                                         });
                                       },
                                       decoration: InputDecoration(
                                         hintText:
-                                            formatPrice(_calculateTotalDue()),
+                                            saleViewModel.formatPrice(saleViewModel.calculateTotalDue()),
                                         border: OutlineInputBorder(
                                           borderRadius:
                                               BorderRadius.circular(8),
@@ -486,11 +318,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                                       ),
                                     ),
                                   ),
-                                  _paymentMethods.length > 1
+                                  saleViewModel.paymentMethods.length > 1
                                       ? IconButton(
                                           icon: const Icon(Icons.remove),
                                           onPressed: () =>
-                                              _removePaymentMethod(index),
+                                              saleViewModel.removePaymentMethod(index),
                                         )
                                       : const SizedBox.shrink(),
                                 ],
@@ -510,7 +342,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: AppColors.titleColor)),
-                      Text(_formatCustomerPayInput(customerPayController.text),
+                      Text(saleViewModel.formatCustomerPayInput(saleViewModel.customerPayController.text),
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold)),
                     ],
@@ -523,14 +355,14 @@ class _CheckoutViewState extends State<CheckoutView> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: AppColors.titleColor)),
-                      Text(changeController.text,
+                      Text(saleViewModel.changeController.text,
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
               ),
-              if (_isSearching)
+              if (saleViewModel.isCustomerSearching)
                 Positioned.fill(
                   child: Column(
                     children: [
@@ -540,12 +372,12 @@ class _CheckoutViewState extends State<CheckoutView> {
                         child: Container(
                           height: 200,
                           decoration: BoxDecoration(
-                            color: _isSearching
+                            color: saleViewModel.isCustomerSearching
                                 ? Colors.white
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
-                              if (_isSearching)
+                              if (saleViewModel.isCustomerSearching)
                                 BoxShadow(
                                   color: Colors.grey.withOpacity(0.5),
                                   spreadRadius: 2,
@@ -555,10 +387,10 @@ class _CheckoutViewState extends State<CheckoutView> {
                             ],
                           ),
                           child: ListView.builder(
-                            itemCount: _filteredCustomers.length,
+                            itemCount: saleViewModel.filteredCustomers.length,
                             itemBuilder: (context, customerIndex) {
                               final customer =
-                                  _filteredCustomers[customerIndex];
+                                  saleViewModel.filteredCustomers[customerIndex];
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor: Colors.blueAccent,
@@ -575,9 +407,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                                 subtitle: Text(customer.phone),
                                 onTap: () {
                                   setState(() {
-                                    _selectCustomer(customer);
+                                    saleViewModel.selectCustomer(customer);
                                   });
-                                  _clearSearch();
+                                  saleViewModel.clearCustomerSearch();
                                 },
                               );
                             },

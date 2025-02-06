@@ -22,6 +22,7 @@ class SaleHistoryModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Customer? getCustomerById(String cid) {
+    if (cid == null || cid.isEmpty) return null;
     return _customers.firstWhere((customer) => customer.id == cid);
   }
 

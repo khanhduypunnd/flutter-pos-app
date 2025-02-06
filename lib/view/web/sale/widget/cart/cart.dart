@@ -2,189 +2,38 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../../../model/product.dart';
-import '../../../../../model/order.dart';
-import '../../../../../model/update_product_quantity.dart';
 import '../../../../../shared/core/theme/colors.dart';
+import '../../../../../view_model/sale_model.dart';
 
 class CartView extends StatefulWidget {
   final String employee;
-  final Function(double) onTotalPriceChanged;
-  final Function(bool) onProductsUpdated;
-  final Function(List<OrderDetail>, List<UpdateProductQuantity>) onProductsSelected;
 
-  const CartView({super.key, required this.employee, required this.onTotalPriceChanged, required this.onProductsUpdated, required this.onProductsSelected});
+  const CartView(
+      {super.key,
+      required this.employee
+      });
 
   @override
   State<CartView> createState() => _CartViewState();
 }
 
-class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<CartView> {
-  final List<Product> _allProducts = [];
-  final List<Product> selectedProducts = [];
-  final TextEditingController searchController = TextEditingController();
-  List<Product> _filteredProducts = [];
-  bool _isSearching = false;
-  bool isLoading = false;
-  int quantity = 1;
-  Map<String, int> productQuantitiesApi = {};
-  Map<String, int> productQuantities = {};
+class _CartViewState extends State<CartView> {
 
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
-  }
-
-  @override
-  bool get wantKeepAlive => true;
-
-  Future<void> _fetchProducts({String query = ''}) async {
-    setState(() {
-      isLoading = true;
+    Future.microtask(() {
+      Provider.of<SaleViewModel>(context, listen: false).fetchProducts();
     });
-
-    try {
-      final url = Uri.parse('https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/products');
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
-        final products = jsonData.map((data) => Product.fromJson(data)).toList();
-
-        setState(() {
-          _allProducts.clear();
-          _allProducts.addAll(products);
-        });
-      } else {
-        throw Exception('Failed to load products');
-      }
-    } catch (error) {
-      print('Error loading products: $error');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading products')));
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-
-  void _onSearch(String query) {
-    setState(() {
-      _filteredProducts = _allProducts
-          .where((product) =>
-          product.name.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-      _isSearching = query.isNotEmpty;
-    });
-  }
-
-  void _clearSearch() {
-    setState(() {
-      _isSearching = false;
-      searchController.clear();
-      _filteredProducts = _allProducts;
-    });
-  }
-
-  void _updateSelectedProducts() {
-    widget.onProductsUpdated(selectedProducts.isNotEmpty);
-  }
-
-  void _selectedProductstoNote() {
-    List<OrderDetail> orderDetails = selectedProducts.expand((product) {
-      return product.sizes.asMap().entries.map((entry) {
-        int index = entry.key;
-        String size = entry.value;
-        return OrderDetail(
-          productId: product.id,
-          size: size,
-          quantity: productQuantities['${product.id}_$size'] ?? 1,
-          price: product.sellPrices[index],
-        );
-      }).toList();
-    }).toList();
-
-    List<UpdateProductQuantity> updateQuantity = selectedProducts.expand((product) {
-      return product.sizes.asMap().entries.map((entry) {
-        int index = entry.key;
-        String size = entry.value;
-        String key = '${product.id}_$size';
-        int currentQuantity = productQuantities['${product.id}_$size'] ?? 1;
-        int apiQuantity = product.quantities[index];
-        int quantityDifference = apiQuantity - currentQuantity;
-
-        return UpdateProductQuantity(
-          oid: "",
-          pid: product.id,
-          size: size,
-          newQuantity: quantityDifference.toString(),
-        );
-      }).toList();
-    }).toList();
-
-    widget.onProductsSelected(orderDetails, updateQuantity);
-  }
-
-
-
-  void _addToSelectedProducts(Product product) {
-    if (!selectedProducts.contains(product)) {
-      setState(() {
-        selectedProducts.add(product);
-      });
-      _updateSelectedProducts();
-      _calculateTotalPrice();
-      _selectedProductstoNote();
-    }
-  }
-
-  void _removeFromSelectedProducts(Product product) {
-    setState(() {
-      selectedProducts.remove(product);
-    });
-    _updateSelectedProducts();
-    _calculateTotalPrice();
-    _selectedProductstoNote();
-  }
-
-  void _clearAllSelectedProducts() {
-    setState(() {
-      selectedProducts.clear();
-    });
-    _updateSelectedProducts();
-    _calculateTotalPrice();
-    _selectedProductstoNote();
-  }
-
-  double _calculateTotalPrice() {
-    double total = 0.0;
-    if (selectedProducts.isEmpty) {
-      widget.onTotalPriceChanged(total);
-      return total;
-    }
-
-    for (var product in selectedProducts) {
-      for (int i = 0; i < product.sizes.length; i++) {
-        String key = '${product.id}_${product.sizes[i]}';
-        int currentQuantity = productQuantities[key] ?? 1;
-        total += product.sellPrices[i] * currentQuantity;
-      }
-    }
-    widget.onTotalPriceChanged(total);
-    return total;
-  }
-
-  String formatPrice(double price) {
-    final format = NumberFormat("#,##0", "en_US");
-    return format.format(price);
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: Scaffold(
@@ -209,16 +58,16 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: TextFormField(
-                      controller: searchController,
-                      onChanged: _onSearch,
+                      controller: saleViewModel.searchProductController,
+                      onChanged: saleViewModel.onSearchProduct,
                       decoration: InputDecoration(
                         hintText: "Tìm sản phẩm",
                         prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _isSearching
+                        suffixIcon: saleViewModel.isProductSearching
                             ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: _clearSearch,
-                        )
+                                icon: const Icon(Icons.clear),
+                                onPressed: saleViewModel.clearProductSearch,
+                              )
                             : null,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
@@ -238,7 +87,7 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                             color: AppColors.titleColor),
                       ),
                       ElevatedButton(
-                        onPressed: _clearAllSelectedProducts,
+                        onPressed: saleViewModel.clearAllSelectedProducts,
                         child: const Text("Xóa tất cả"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
@@ -255,15 +104,17 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                   Expanded(
                     flex: 3,
                     child: ListView.builder(
-                      itemCount: selectedProducts.length,
+                      itemCount: saleViewModel.selectedProducts.length,
                       itemBuilder: (context, index) {
-                        final product = selectedProducts[index];
+                        final product = saleViewModel.selectedProducts[index];
                         return Column(
-                          children: List.generate(product.sizes.length, (sizeIndex) {
+                          children:
+                              List.generate(product.sizes.length, (sizeIndex) {
                             return ListTile(
                               leading: const Icon(Icons.image),
                               title: Text(product.name),
-                              subtitle: Text("${product.sizes[sizeIndex]} - ${formatPrice( product.sellPrices[sizeIndex])} VND"),
+                              subtitle: Text(
+                                  "${product.sizes[sizeIndex]} - ${saleViewModel.formatPrice(product.sellPrices[sizeIndex])} VND"),
                               trailing: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -271,56 +122,68 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                                     icon: const Icon(Icons.remove),
                                     onPressed: () {
                                       setState(() {
-                                        String key = '${product.id}_${product.sizes[sizeIndex]}';
-                                        int currentQuantity = productQuantities[key] ?? 1;
+                                        String key =
+                                            '${product.id}_${product.sizes[sizeIndex]}';
+                                        int currentQuantity =
+                                            saleViewModel.productQuantities[key] ?? 1;
                                         if (currentQuantity > 1) {
-                                          productQuantities[key] = currentQuantity - 1;
-                                          _calculateTotalPrice();
+                                          saleViewModel.productQuantities[key] =
+                                              currentQuantity - 1;
+                                          saleViewModel.calculateTotalPrice();
                                         }
                                       });
-                                      _selectedProductstoNote();
-                                      _calculateTotalPrice();
+                                      saleViewModel.selectedProductstoNote();
+                                      saleViewModel.calculateTotalPrice();
                                     },
                                   ),
-                                  Text((productQuantities['${product.id}_${product.sizes[sizeIndex]}'] ?? 1).toString(), style: TextStyle(fontSize: 18),),
+                                  Text(
+                                    (saleViewModel.productQuantities[
+                                                '${product.id}_${product.sizes[sizeIndex]}'] ??
+                                            1)
+                                        .toString(),
+                                    style: TextStyle(fontSize: 18),
+                                  ),
                                   IconButton(
                                     icon: const Icon(Icons.add),
                                     onPressed: () {
                                       setState(() {
-                                        String key = '${product.id}_${product.sizes[sizeIndex]}';
-                                        int currentQuantity = productQuantities[key] ?? 1;
-                                        int maxQuantity = product.quantities[sizeIndex];
+                                        String key =
+                                            '${product.id}_${product.sizes[sizeIndex]}';
+                                        int currentQuantity =
+                                            saleViewModel.productQuantities[key] ?? 1;
+                                        int maxQuantity =
+                                            product.quantities[sizeIndex];
                                         if (currentQuantity < maxQuantity) {
-                                          productQuantities[key] = currentQuantity + 1;
-                                          _calculateTotalPrice();
+                                          saleViewModel.productQuantities[key] =
+                                              currentQuantity + 1;
+                                          saleViewModel.calculateTotalPrice();
                                         }
                                       });
-                                      _selectedProductstoNote();
-                                      _calculateTotalPrice();
+                                      saleViewModel.selectedProductstoNote();
+                                      saleViewModel.calculateTotalPrice();
                                     },
                                   ),
-
                                   const SizedBox(width: 10),
-
                                   IconButton(
-                                    icon: const Icon(Icons.delete_outlined, color: Colors.red,),
+                                    icon: const Icon(
+                                      Icons.delete_outlined,
+                                      color: Colors.red,
+                                    ),
                                     onPressed: () {
                                       setState(() {
-                                        _removeFromSelectedProducts(product);
+                                        saleViewModel.removeFromSelectedProducts(product);
                                       });
                                     },
                                   ),
                                 ],
                               ),
-                              onTap: () {
-                              },
+                              onTap: () {},
                             );
                           }),
                         );
                       },
                     ),
-                  )
-                  ,
+                  ),
                   const Divider(),
                   Container(
                     alignment: Alignment.topLeft,
@@ -340,7 +203,7 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                   ),
                 ],
               ),
-              if (_isSearching)
+              if (saleViewModel.isProductSearching)
                 Positioned.fill(
                   child: Column(
                     children: [
@@ -350,10 +213,12 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                         child: Container(
                           height: 300,
                           decoration: BoxDecoration(
-                            color: _isSearching ? Colors.white : Colors.transparent,
+                            color: saleViewModel.isProductSearching
+                                ? Colors.white
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
-                              if (_isSearching)
+                              if (saleViewModel.isProductSearching)
                                 BoxShadow(
                                   color: Colors.grey.withOpacity(0.5),
                                   spreadRadius: 2,
@@ -363,50 +228,77 @@ class _CartViewState extends State<CartView> with AutomaticKeepAliveClientMixin<
                             ],
                           ),
                           child: ListView.builder(
-                            itemCount: _filteredProducts.length,
+                            itemCount:
+                                saleViewModel.listFilteredProducts.length,
                             itemBuilder: (context, productIndex) {
-                              final product = _filteredProducts[productIndex];
+                              final product = saleViewModel
+                                  .listFilteredProducts[productIndex];
 
                               return Column(
-                                children: List.generate(product.sizes.length, (sizeIndex) {
-                                  final quantity = product.quantities[sizeIndex];
+                                children: List.generate(product.sizes.length,
+                                    (sizeIndex) {
+                                  final quantity =
+                                      product.quantities[sizeIndex];
                                   return ListTile(
                                     leading: const Icon(Icons.image),
                                     title: Text(product.name),
-                                    subtitle: Text("${product.sizes[sizeIndex]} - ${formatPrice(product.sellPrices[sizeIndex])} VND"),
+                                    subtitle: Text(
+                                        "${product.sizes[sizeIndex]} - ${saleViewModel.formatPrice(product.sellPrices[sizeIndex])} VND"),
                                     trailing: Text("$quantity khả dụng"),
                                     onTap: quantity > 0
                                         ? () {
-                                      setState(() {
-                                        bool isProductExist = selectedProducts.any((selectedProduct) =>
-                                        selectedProduct.id == product.id &&
-                                            selectedProduct.sizes.contains(product.sizes[sizeIndex]));
-                                        if (!isProductExist) {
-                                          final selectedProduct = Product(
-                                            id: product.id,
-                                            name: product.name,
-                                            supplier: product.supplier,
-                                            category: product.category,
-                                            usage: product.usage,
-                                            origin: product.origin,
-                                            description: product.description,
-                                            notes: product.notes,
-                                            sizes: [product.sizes[sizeIndex]],
-                                            actualPrices: [product.actualPrices[sizeIndex]],
-                                            sellPrices: [product.sellPrices[sizeIndex]],
-                                            quantities: [product.quantities[sizeIndex]],
-                                            image: product.image,
-                                            averageRating: product.averageRating,
-                                            totalReviews: product.totalReviews,
-                                          );
-                                          selectedProducts.add(selectedProduct);
-                                          _updateSelectedProducts();
-                                          _calculateTotalPrice();
-                                          _selectedProductstoNote();
-                                        }
-                                        _clearSearch();
-                                      });
-                                    }
+                                            setState(() {
+                                              bool isProductExist =
+                                                  saleViewModel.selectedProducts
+                                                      .any((selectedProduct) =>
+                                                          selectedProduct.id ==
+                                                              product.id &&
+                                                          selectedProduct.sizes
+                                                              .contains(product
+                                                                      .sizes[
+                                                                  sizeIndex]));
+                                              if (!isProductExist) {
+                                                final selectedProduct = Product(
+                                                  id: product.id,
+                                                  name: product.name,
+                                                  supplier: product.supplier,
+                                                  category: product.category,
+                                                  usage: product.usage,
+                                                  origin: product.origin,
+                                                  description:
+                                                      product.description,
+                                                  notes: product.notes,
+                                                  sizes: [
+                                                    product.sizes[sizeIndex]
+                                                  ],
+                                                  actualPrices: [
+                                                    product
+                                                        .actualPrices[sizeIndex]
+                                                  ],
+                                                  sellPrices: [
+                                                    product
+                                                        .sellPrices[sizeIndex]
+                                                  ],
+                                                  quantities: [
+                                                    product
+                                                        .quantities[sizeIndex]
+                                                  ],
+                                                  image: product.image,
+                                                  averageRating:
+                                                      product.averageRating,
+                                                  totalReviews:
+                                                      product.totalReviews,
+                                                );
+                                                saleViewModel.selectedProducts
+                                                    .add(selectedProduct);
+                                                saleViewModel.updateSelectedProducts();
+                                                saleViewModel
+                                                    .calculateTotalPrice();
+                                                saleViewModel.selectedProductstoNote();
+                                              }
+                                              saleViewModel.clearProductSearch();
+                                            });
+                                          }
                                         : null,
                                   );
                                 }),

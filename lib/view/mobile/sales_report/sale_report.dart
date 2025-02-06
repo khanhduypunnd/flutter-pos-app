@@ -6,30 +6,15 @@ import 'widget/chart/line_chart.dart';
 import 'widget/chart/pie_chart.dart';
 import 'widget/chart/bar_chart.dart';
 
-void main() {
-  runApp(const MyApp());
-}
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SaleReportMobile extends StatefulWidget {
+  const SaleReportMobile({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: SaleReport(),
-    );
-  }
+  State<SaleReportMobile> createState() => _SaleReportMobileState();
 }
 
-class SaleReport extends StatefulWidget {
-  const SaleReport({super.key});
-
-  @override
-  State<SaleReport> createState() => _SaleReportState();
-}
-
-class _SaleReportState extends State<SaleReport> {
+class _SaleReportMobileState extends State<SaleReportMobile> {
   late double maxWidth;
 
   String selectedTab = 'Bán hàng';
