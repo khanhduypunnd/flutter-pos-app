@@ -461,17 +461,15 @@ class SaleViewModel with ChangeNotifier {
           final apiResponse = jsonDecode(responseGet.body);
 
           if (!apiResponse.containsKey("product") || apiResponse["product"] == null) {
-            print("⚠ Không tìm thấy sản phẩm $productId");
+            print("Không tìm thấy sản phẩm $productId");
             continue;
           }
           final productData = apiResponse["product"];
 
-          // ✅ Đảm bảo `sizes` là List<String>
           if (productData["sizes"] is! List<String>) {
             productData["sizes"] = List<String>.from(productData["sizes"]);
           }
 
-          // ✅ Đảm bảo `quantities` là List<int>
           if (productData["quantities"] is! List<int>) {
             productData["quantities"] = List<int>.from(
                 productData["quantities"].map((q) => int.tryParse(q.toString()) ?? 0));

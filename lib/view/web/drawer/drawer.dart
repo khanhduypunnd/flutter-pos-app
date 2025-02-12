@@ -103,7 +103,7 @@ class DrawerMenu extends StatelessWidget {
         context.go(route);
         Navigator.pop(context);
       },
-      selected: selectedPage == route,
+        selected: selectedPage == route,
     );
   }
 

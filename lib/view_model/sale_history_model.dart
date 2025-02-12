@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../model/customer.dart';
 import '../model/order.dart';
 import '../model/product.dart';
+import '../model/update_product_quantity.dart';
 import '../shared/core/services/api.dart';
 
 class SaleHistoryModel extends ChangeNotifier {
@@ -263,6 +264,7 @@ class SaleHistoryModel extends ChangeNotifier {
     Order? order;
     int currentStatus = -1;
 
+
     List<List<Order>> allOrderLists = [
       _listOrdersWeb0,
       _listOrdersWeb1,
@@ -288,24 +290,34 @@ class SaleHistoryModel extends ChangeNotifier {
       return;
     }
 
-    if (currentStatus < 5) {
-      int newStatus = currentStatus + 1;
-      order.status = newStatus;
-      allOrderLists[newStatus].add(order);
-    }
+    int newStatus = currentStatus + 1;
+    order.status = newStatus;
+    allOrderLists[newStatus].add(order);
+
+
+    Order updatedOrder = order.copyWith(status: order.status);
+
+
 
     try {
       final url = Uri.parse('${uriAPIService.apiUrlOrder}/$orderId');
-      final response = await http.patch(
+      final response = await http.put(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'status': order.status}),
+        body: json.encode(updatedOrder),
       );
 
       if (response.statusCode == 200) {
         if (kDebugMode) {
           print("Cập nhật trạng thái thành công: ${order.status}");
         }
+        if (currentStatus == 2 && newStatus == 3) {
+          if (kDebugMode) {
+            print("Đơn hàng chuyển sang trạng thái 3, tiến hành trừ sản phẩm trong kho...");
+          }
+          await _updateProductQuantities(order);
+        }
+
         try {
           await fetchOrderWeb();
           if (kDebugMode) {
@@ -358,9 +370,6 @@ class SaleHistoryModel extends ChangeNotifier {
 
 
     Order updatedOrder = order.copyWith(status: 5);
-    allOrderLists[5].add(updatedOrder);
-
-    print(updatedOrder.toString());
 
 
     try {
@@ -386,5 +395,63 @@ class SaleHistoryModel extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  Future<void> _updateProductQuantities(Order order) async {
+    List<UpdateProductQuantity> updateQuantity = order.orderDetails.map((detail) {
+      return UpdateProductQuantity(
+        oid: order.id,
+        pid: detail.productId,
+        size: detail.size,
+        newQuantity: detail.quantity,
+      );
+    }).toList();
+
+    try {
+      for (var detail in updateQuantity) {
+        final urlGet = Uri.parse('${uriAPIService.apiUrlProduct}/${detail.pid}');
+        final responseGet = await http.get(urlGet);
+
+        if (responseGet.statusCode == 200) {
+          final productData = jsonDecode(responseGet.body)['product'];
+
+          if (productData == null) {
+            print("Không tìm thấy sản phẩm ${detail.pid}");
+            continue;
+          }
+
+          final sizeIndex = productData["sizes"].indexOf(detail.size);
+          if (sizeIndex == -1) {
+            print('⚠ Size ${detail.size} không tồn tại trong sản phẩm ${detail.pid}');
+            continue;
+          }
+
+          productData["quantities"][sizeIndex] =
+              (productData["quantities"][sizeIndex] - detail.newQuantity).clamp(0, double.infinity);
+
+          final urlUpdate = Uri.parse('${uriAPIService.apiUrlProduct}/${detail.pid}');
+          final responseUpdate = await http.put(
+            urlUpdate,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode(productData),
+          );
+
+          if (responseUpdate.statusCode == 200) {
+            if (kDebugMode) {
+              print("Cập nhật thành công số lượng sản phẩm ${detail.pid}");
+            }
+          } else {
+            if (kDebugMode) {
+              print("❌ Lỗi khi cập nhật sản phẩm ${detail.pid}: ${responseUpdate.statusCode}");
+            }
+          }
+        } else {
+          print('Lỗi khi lấy dữ liệu sản phẩm ${detail.pid}: ${responseGet.statusCode}');
+        }
+      }
+    } catch (error) {
+      print('Lỗi khi cập nhật số lượng sản phẩm: $error');
+    }
+  }
+
 
 }
