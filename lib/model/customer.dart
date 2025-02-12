@@ -19,7 +19,7 @@ class Customer {
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
-      id: json['cid'] ?? '',
+      id: json['id'] ?? '',
       name: json['name'] ?? '',
       dob: json['dateOfBirth'] != null
           ? DateTime.fromMillisecondsSinceEpoch(json['dateOfBirth']['_seconds'] * 1000)

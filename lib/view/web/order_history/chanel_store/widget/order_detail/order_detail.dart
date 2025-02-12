@@ -10,7 +10,6 @@ import '../../../../../../view_model/sale_history_model.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final Order order;
-  // final List<Product> products;
 
   const OrderDetailScreen({super.key, required this.order});
 
@@ -167,16 +166,3 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 }
 
-class OrderDetail {
-  final String oid;
-  final String pid;
-  final String quantity;
-  final String price;
-
-  OrderDetail({
-    required this.oid,
-    required this.pid,
-    required this.quantity,
-    required this.price,
-  });
-}

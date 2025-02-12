@@ -37,10 +37,10 @@ class Promotion {
       value: double.tryParse(json['value'].toString()) ?? 0.0,
       valueLimit: double.tryParse(json['value_limit'].toString()) ?? 0.0,
       beginning: json['beginning'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(json['beginning']['_seconds'] * 1000)
+          ? DateTime.fromMillisecondsSinceEpoch(json['beginning']['_seconds'] * 1000).toUtc()
           : DateTime.now(),
       expiration: json['expiration'] != null
-          ? DateTime.fromMillisecondsSinceEpoch(json['expiration']['_seconds'] * 1000)
+          ? DateTime.fromMillisecondsSinceEpoch(json['expiration']['_seconds'] * 1000).toUtc()
           : DateTime.now(),
     );
   }

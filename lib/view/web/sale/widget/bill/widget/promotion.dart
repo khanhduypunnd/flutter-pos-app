@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../../../../model/promotion.dart';
+import '../../../../../../shared/core/services/api.dart';
 
 void showPromotion(BuildContext context, TextEditingController discountController, double price, Function(String) onPromotionSaved) {
   showDialog(
@@ -32,6 +33,9 @@ class PromotionDialog extends StatefulWidget {
 }
 
 class _ShippingDialogState extends State<PromotionDialog> {
+  final ApiService uriAPIService = ApiService();
+
+
   List<Map<String, dynamic>> promotions = [];
   bool isLoading = false;
 
@@ -47,7 +51,7 @@ class _ShippingDialogState extends State<PromotionDialog> {
     });
 
     try {
-      final url = Uri.parse('https://dacntt1-api-server-baukpbwdh-haonguyen9191s-projects.vercel.app/api/giftCodes');
+      final url = Uri.parse(uriAPIService.apiUrlGiftCode);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {

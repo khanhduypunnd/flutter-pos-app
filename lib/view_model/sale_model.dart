@@ -11,8 +11,11 @@ import '../../../../../model/order.dart';
 import '../../../../../model/update_product_quantity.dart';
 import '../model/customer.dart';
 import '../model/payment_method.dart';
+import '../shared/core/services/api.dart';
 
 class SaleViewModel with ChangeNotifier {
+  final ApiService uriAPIService = ApiService();
+
   String sid = '';
   String cid = '';
   String paymentMethod = 'Tiền mặt';
@@ -103,7 +106,7 @@ class SaleViewModel with ChangeNotifier {
 
     try {
       final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/products');
+          uriAPIService.apiUrlProduct);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -173,7 +176,7 @@ class SaleViewModel with ChangeNotifier {
           oid: "",
           pid: product.id,
           size: size,
-          newQuantity: quantityDifference.toString(),
+          newQuantity: quantityDifference,
         );
       }).toList();
     }).toList();
@@ -214,7 +217,7 @@ class SaleViewModel with ChangeNotifier {
 
     try {
       final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/customers');
+          uriAPIService.apiUrlCustomer);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -389,6 +392,7 @@ class SaleViewModel with ChangeNotifier {
 
     Order newOrder = Order(
         id: newOrderId,
+        oid: newOrderId,
         sid: sid,
         cid: customerId,
         channel: channel,
@@ -407,7 +411,7 @@ class SaleViewModel with ChangeNotifier {
 
     try {
       final response =
-      await http.post(Uri.parse('https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/orders'),
+      await http.post(Uri.parse(uriAPIService.apiUrlOrder),
           headers: {
             'Content-Type': 'application/json',
           },
@@ -442,37 +446,48 @@ class SaleViewModel with ChangeNotifier {
     Map<String, List<UpdateProductQuantity>> groupedUpdates = {};
 
     for (var detail in updateQuantity) {
-      if (!groupedUpdates.containsKey(detail.pid)) {
-        groupedUpdates[detail.pid] = [];
-      }
-      groupedUpdates[detail.pid]!.add(detail);
+      groupedUpdates.putIfAbsent(detail.pid, () => []).add(detail);
     }
-
 
     for (var entry in groupedUpdates.entries) {
       String productId = entry.key;
       List<UpdateProductQuantity> productUpdates = entry.value;
 
       try {
-        final urlGet = Uri.parse('https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/products/$productId');
+        final urlGet = Uri.parse('${uriAPIService.apiUrlProduct}/$productId');
         final responseGet = await http.get(urlGet);
 
-
         if (responseGet.statusCode == 200) {
-          final productData = jsonDecode(responseGet.body);
+          final apiResponse = jsonDecode(responseGet.body);
+
+          if (!apiResponse.containsKey("product") || apiResponse["product"] == null) {
+            print("⚠ Không tìm thấy sản phẩm $productId");
+            continue;
+          }
+          final productData = apiResponse["product"];
+
+          // ✅ Đảm bảo `sizes` là List<String>
+          if (productData["sizes"] is! List<String>) {
+            productData["sizes"] = List<String>.from(productData["sizes"]);
+          }
+
+          // ✅ Đảm bảo `quantities` là List<int>
+          if (productData["quantities"] is! List<int>) {
+            productData["quantities"] = List<int>.from(
+                productData["quantities"].map((q) => int.tryParse(q.toString()) ?? 0));
+          }
 
           for (var detail in productUpdates) {
             final sizeIndex = productData['sizes'].indexOf(detail.size);
             if (sizeIndex == -1) {
-              print('Size ${detail.size} not found for product ${detail.pid}');
+              print('⚠ Size ${detail.size} không tồn tại trong sản phẩm $productId');
               continue;
             }
-
-            productData['quantities'][sizeIndex] = int.parse(detail.newQuantity);
+            productData['quantities'][sizeIndex] = (detail.newQuantity);
           }
 
-          print("Dữ liệu sản phẩm sau khi cập nhật: $productData");
-          final urlUpdate = Uri.parse('https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/products/$productId');
+
+          final urlUpdate = Uri.parse('${uriAPIService.apiUrlProduct}/$productId');
           final responseUpdate = await http.put(
             urlUpdate,
             headers: {"Content-Type": "application/json"},
@@ -485,22 +500,27 @@ class SaleViewModel with ChangeNotifier {
             }
           } else {
             if (kDebugMode) {
-              print(" Lỗi khi cập nhật sản phẩm $productId: ${responseUpdate.statusCode}");
+              print("Lỗi khi cập nhật sản phẩm $productId: ${responseUpdate.statusCode}");
+            }
+            if (kDebugMode) {
+              print("Phản hồi từ server: ${responseUpdate.body}");
             }
           }
         } else {
           if (kDebugMode) {
-            print(' Lỗi khi lấy dữ liệu sản phẩm ${entry.key}: ${responseGet.statusCode}');
+            print('Lỗi khi lấy dữ liệu sản phẩm $productId: ${responseGet.statusCode}');
           }
         }
       } catch (error) {
         if (kDebugMode) {
-          print(' Lỗi khi cập nhật sản phẩm ${entry.key}: $error');
+          print('Lỗi khi cập nhật sản phẩm $productId: $error');
         }
       }
     }
     notifyListeners();
   }
+
+
 
   Future<void> handlePayment(BuildContext context) async {
     if (!canProceedToPayment1) {

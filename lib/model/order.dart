@@ -1,5 +1,6 @@
 class Order {
   final String id;
+  final String oid;
   final String sid;
   final String cid;
   final String channel;
@@ -17,6 +18,7 @@ class Order {
 
   Order({
     required this.id,
+    required this.oid,
     required this.sid,
     required this.cid,
     required this.channel,
@@ -35,7 +37,8 @@ class Order {
 
   factory Order.fromJson(Map<String, dynamic> order) {
     return Order(
-      id: order['oid'] ?? '',
+      id: order['id'] ?? '',
+      oid: order['oid'] ?? '',
       sid: order['sid'] ?? '',
       cid: order['cid'] ?? '',
       channel: order['channel'] ?? '',
@@ -46,7 +49,7 @@ class Order {
       receivedMoney: double.parse(order['receivedMoney']?.toString() ?? '0.0') ?? 0.0,
       change: double.parse(order['change']?.toString() ?? '0.0') ?? 0.0,
       actualReceived: double.parse(order['actualReceived']?.toString() ?? '0.0') ?? 0.0,
-      date: DateTime.fromMillisecondsSinceEpoch(order['date']['_seconds'] * 1000),
+      date: DateTime.fromMillisecondsSinceEpoch(order['date']['_seconds'] * 1000).toUtc(),
       note: order['note'] ?? '',
       status: int.parse(order['status'].toString()),
       orderDetails: (order['orderDetails'] as List)
@@ -57,6 +60,7 @@ class Order {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'oid': id,
       'sid': sid,
       'cid': cid,
@@ -77,10 +81,48 @@ class Order {
 
   @override
   String toString() {
-    return 'Order(id: $id, sid: $sid, cid: $cid, channel: $channel, paymentMethod: $paymentMethod, '
+    return 'Order(id: $id, oid: $oid,sid: $sid, cid: $cid, channel: $channel, paymentMethod: $paymentMethod, '
         'totalPrice: $totalPrice, shipping: $deliveryFee, discount: $discount, receivedMoney: $receivedMoney, '
         'change: $change, actualReceived: $actualReceived, date: ${date.toIso8601String()}, note: $note, '
         'orderDetails: ${orderDetails.map((detail) => detail.toString()).join(', ')}, status: $status)';
+  }
+
+  Order copyWith({
+    String? id,
+    String? oid,
+    String? sid,
+    String? cid,
+    String? channel,
+    String? paymentMethod,
+    double? totalPrice,
+    double? deliveryFee,
+    double? discount,
+    double? receivedMoney,
+    double? change,
+    double? actualReceived,
+    String? note,
+    DateTime? date,
+    List<OrderDetail>? orderDetails,
+    int? status,
+  }) {
+    return Order(
+      id: id ?? this.id,
+      oid: id?? this.oid,
+      sid: sid ?? this.sid,
+      cid: cid ?? this.cid,
+      channel: channel ?? this.channel,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      totalPrice: totalPrice ?? this.totalPrice.toDouble(),
+      deliveryFee: deliveryFee ?? this.deliveryFee.toDouble(),
+      discount: discount ?? this.discount.toDouble(),
+      receivedMoney: receivedMoney ?? this.receivedMoney.toDouble(),
+      change: change ?? this.change.toDouble(),
+      actualReceived: actualReceived ?? this.actualReceived.toDouble(),
+      note: note ?? this.note,
+      date: date ?? this.date,
+      orderDetails: orderDetails ?? this.orderDetails,
+      status: status ?? this.status.toInt(),
+    );
   }
 
 }

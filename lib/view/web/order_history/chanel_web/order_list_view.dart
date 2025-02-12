@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../../../../../model/order.dart';
 
 import '../../../../view_model/sale_history_model.dart';
 
@@ -21,19 +20,32 @@ class OrderListViewWeb extends StatefulWidget {
 class _OrderListViewStoreState extends State<OrderListViewWeb> {
   bool _isFetched = false;
 
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () {
+
+    Future.microtask(() {
       final saleHistoryModel = Provider.of<SaleHistoryModel>(context, listen: false);
 
       if (!_isFetched) {
         _isFetched = true;
-        saleHistoryModel.fetchOrdersWeb().then((_) {
+        saleHistoryModel.fetchOrderWeb().then((_) {
           saleHistoryModel.fetchCustomers();
           saleHistoryModel.fetchProducts();
-          if (saleHistoryModel.ordersWeb.isNotEmpty) {
-            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb);
+
+          if (saleHistoryModel.ordersWeb0.isNotEmpty) {
+            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb0);
+          } else if (saleHistoryModel.ordersWeb1.isNotEmpty) {
+            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb1);
+          } else if (saleHistoryModel.ordersWeb2.isNotEmpty) {
+            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb2);
+          } else if (saleHistoryModel.ordersWeb3.isNotEmpty) {
+            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb3);
+          } else if (saleHistoryModel.ordersWeb4.isNotEmpty) {
+            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb4);
+          } else if (saleHistoryModel.ordersWeb5.isNotEmpty) {
+            saleHistoryModel.orderFirst(saleHistoryModel.ordersWeb5);
           }
         }).catchError((error) {
           print("Error fetching orders: $error");
@@ -41,6 +53,7 @@ class _OrderListViewStoreState extends State<OrderListViewWeb> {
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +74,6 @@ class _OrderListViewStoreState extends State<OrderListViewWeb> {
                       child: OrderListScreenWeb(
                         onOrderSelected: saleHistoryModel.onOrderSelected,
                         selectedOrder: saleHistoryModel.selectedOrder,
-                        orders: saleHistoryModel.ordersWeb,
                       ),
                     ),
                     Padding(

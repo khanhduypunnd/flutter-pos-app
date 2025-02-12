@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../../../../model/order.dart';
+import '../../../../../../view_model/sale_history_model.dart';
 import '../../../../../../shared/core/theme/colors.dart';
-import '../../../../../../shared/core/pick_date/pick_date.dart';
 
 class OrderListScreenWeb extends StatefulWidget {
   final Function(Order) onOrderSelected;
   final Order? selectedOrder;
-  final List<Order> orders;
 
   const OrderListScreenWeb({
     super.key,
     required this.onOrderSelected,
     this.selectedOrder,
-    required this.orders,
   });
 
   @override
@@ -21,29 +20,56 @@ class OrderListScreenWeb extends StatefulWidget {
 
 class _OrderListScreenWebState extends State<OrderListScreenWeb> {
   late double maxWidth;
-
   String searchQuery = "";
   String dropdownValue = 'Đơn hàng mới';
 
-  List<Order> get filteredOrders {
-    if (searchQuery.isEmpty) {
-      return widget.orders;
-    }
-    return widget.orders.where((order) {
-      return order.id.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          order.cid.toLowerCase().contains(searchQuery.toLowerCase());
-    }).toList();
-  }
+  List<String> dropdownItems = [
+    'Đơn hàng mới',
+    'Đơn đã nhận',
+    'Đơn đang chuẩn bị',
+    'Đơn đang giao',
+    'Đơn đã giao',
+    'Đơn đã hủy'
+  ];
 
   @override
   void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
     super.didChangeDependencies();
     maxWidth = MediaQuery.of(context).size.width;
   }
 
   @override
   Widget build(BuildContext context) {
+    final saleHistoryModel = Provider.of<SaleHistoryModel>(context);
+
+    List<Order> orders = [];
+    switch (dropdownValue) {
+      case 'Đơn hàng mới':
+        orders = saleHistoryModel.ordersWeb0;
+        break;
+      case 'Đơn đã nhận':
+        orders = saleHistoryModel.ordersWeb1;
+        break;
+      case 'Đơn đang chuẩn bị':
+        orders = saleHistoryModel.ordersWeb2;
+        break;
+      case 'Đơn đang giao':
+        orders = saleHistoryModel.ordersWeb3;
+        break;
+      case 'Đơn đã giao':
+        orders = saleHistoryModel.ordersWeb4;
+        break;
+      case 'Đơn đã hủy':
+        orders = saleHistoryModel.ordersWeb5;
+        break;
+    }
+
+    List<Order> filteredOrders = orders.where((order) {
+      return searchQuery.isEmpty ||
+          order.id.toLowerCase().contains(searchQuery.toLowerCase()) ||
+          order.cid.toLowerCase().contains(searchQuery.toLowerCase());
+    }).toList();
+
     return Column(
       children: [
         Container(
@@ -67,9 +93,7 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
             style: TextStyle(color: Colors.blueAccent),
             dropdownColor: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            underline: Container(
-              height: 0,
-            ),
+            underline: Container(height: 0),
             itemHeight: 48,
             isExpanded: true,
             onChanged: (String? newValue) {
@@ -77,14 +101,7 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
                 dropdownValue = newValue!;
               });
             },
-            items: <String>[
-              'Đơn hàng mới',
-              'Đơn đã nhận',
-              'Đơn đang chuẩn bị',
-              'Đơn đang giao',
-              'Đơn đã giao',
-              'Đơn đã hủy'
-            ].map<DropdownMenuItem<String>>((String value) {
+            items: dropdownItems.map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value, style: TextStyle(color: AppColors.subtitleColor, fontSize: 15)),
@@ -92,7 +109,9 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
             }).toList(),
           ),
         ),
-        SizedBox(height: 10,),
+
+        SizedBox(height: 10),
+
         TextFormField(
           decoration: const InputDecoration(
             labelText: 'Nhập mã đơn, tên khách hàng...',
@@ -105,7 +124,9 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
             });
           },
         ),
+
         const Divider(),
+
         Expanded(
           child: ListView.builder(
             itemCount: filteredOrders.length,
@@ -130,18 +151,13 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(order.date.toString(),
-                              style: const TextStyle(fontSize: 15)),
-                          Text(order.id,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.titleColor)),
+                          Text(order.date.toString(), style: const TextStyle(fontSize: 15)),
+                          Text(order.id, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.titleColor)),
                           Text(order.cid),
                         ],
                       ),
                       const Spacer(),
-                      Text(order.totalPrice.toString(),
-                          style: const TextStyle(fontSize: 15)),
+                      Text(order.totalPrice.toString(), style: const TextStyle(fontSize: 15)),
                     ],
                   ),
                 ),

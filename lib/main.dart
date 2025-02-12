@@ -1,3 +1,4 @@
+import 'package:dacntt1_mobile_store/view_model/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -19,6 +20,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => SaleViewModel()),
         ChangeNotifierProvider(create: (context) => SaleHistoryModel()),
         ChangeNotifierProvider(create: (context) => ReportModel()),
+        ChangeNotifierProvider(create: (context) => LoginModel()),
       ],
       child: const MyApp(),
     ),

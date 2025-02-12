@@ -195,7 +195,7 @@ class _CartViewState extends State<CartView> {
                           style: TextStyle(color: AppColors.subtitleColor),
                         ),
                         Text(
-                          widget.employee, // Sử dụng widget.employee
+                          widget.employee,
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ],

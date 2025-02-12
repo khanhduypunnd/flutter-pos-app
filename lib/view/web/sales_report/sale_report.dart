@@ -13,7 +13,8 @@ import 'widget/chart/pie_chart.dart';
 import 'widget/chart/bar_chart.dart';
 
 class SaleReport extends StatefulWidget {
-  const SaleReport({super.key});
+  final Map<String, dynamic>? staffData;
+  const SaleReport({super.key, this.staffData});
 
   @override
   State<SaleReport> createState() => _SaleReportState();
@@ -28,19 +29,45 @@ class _SaleReportState extends State<SaleReport> {
     return spots.map((spot) => FlSpot(spot.x, spot.y / scaleFactor)).toList();
   }
 
+  DateTime? startDate = DateTime.now();
+  DateTime? endDate = DateTime.now();
+
+
+  void _onDateSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      startDate = start;
+      endDate = end;
+    });
+    final reportModel = Provider.of<ReportModel>(context, listen: false);
+    if (start != null && end != null) {
+      print("Ngày được chọn: $start - $end");
+      reportModel.fetchOrdersStore(start, end);
+      print(reportModel.listOrdersStore);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.microtask(() {
+      final reportModel = Provider.of<ReportModel>(context, listen: false);
+
+      if (!reportModel.hasFetched) {
+        reportModel.fetchOrdersStore(startDate!, endDate!).then((_) {
+          reportModel.fetchProducts();
+        }).catchError((error) {
+          if (kDebugMode) {
+            print("Lỗi khi tải đơn hàng: $error");
+          }
+        });
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final reportModel = Provider.of<ReportModel>(context);
-
-    if (reportModel.listOrdersStore.isEmpty) {
-      reportModel.fetchOrdersStore().then((_) {
-        reportModel.fetchProducts();
-      }).catchError((error) {
-        if (kDebugMode) {
-          print("Error fetching orders: $error");
-        }
-      });
-    }
 
     //line chart
     double scaleFactor = reportModel.getMaxY() > 1000000 ? 1000000 : (reportModel.getMaxY() > 1000 ? 1000 : 1);
@@ -52,6 +79,26 @@ class _SaleReportState extends State<SaleReport> {
     List<int> ordersBarChart = ordersAndProducts['orders']!;
     List<int> productsBarChart = ordersAndProducts['products']!;
 
+    List<int>? roleDetail = widget.staffData?['role_detail'] != null
+        ? List<int>.from(widget.staffData!['role_detail'])
+        : null;
+
+    bool canAccessSalesReport = roleDetail == null ||
+        roleDetail.isEmpty ||
+        roleDetail[roleDetail.length - 2] == 0;
+
+    if (!canAccessSalesReport) {
+      return Scaffold(
+        backgroundColor: Colors.grey.shade200,
+        body: const Center(
+          child: Text(
+            "🚫 Bạn không có quyền truy cập vào trang này",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey.shade200,
       body: Padding(
@@ -59,8 +106,8 @@ class _SaleReportState extends State<SaleReport> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const Row(
-                children: [TimeSelection()],
+              Row(
+                children: [TimeSelection(onDateSelected: _onDateSelected)],
               ),
               const SizedBox(height: 20),
               LayoutBuilder(
@@ -246,8 +293,8 @@ class _SaleReportState extends State<SaleReport> {
     ];
 
     return Wrap(
-      spacing: 10, // Khoảng cách giữa các card
-      runSpacing: 10, // Khoảng cách giữa các dòng khi xuống dòng
+      spacing: 10,
+      runSpacing: 10,
       alignment: WrapAlignment.start,
       children: cards,
     );

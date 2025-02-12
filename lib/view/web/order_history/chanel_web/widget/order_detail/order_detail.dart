@@ -55,6 +55,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
         subtitle: Text('Số lượng: ${detail.quantity}, Giá: ${detail.price}đ'),
       );
     }).toList();
+
+    final bool isCancelled = widget.order.status == 5;
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: Scaffold(
@@ -102,14 +104,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Khách hàng: ${customer?.name}',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500),
+                          'Khách hàng: ${customer?.name ?? "Không rõ"}',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         ),
-                        const SizedBox(height: 4),
                         Text(
-                          'SĐT: ${customer?.phone}',
-                          style: TextStyle(fontSize: 14),
+                          'SĐT: ${customer?.phone ?? "Không rõ"}',
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ],
                     ),
@@ -170,9 +170,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
                             ? widget.order.note
                             : 'Không có ghi chú.',
                         style: TextStyle(fontSize: 14)),
-                    Row(
-                      children: [
-                        ElevatedButton(
+                    if (!isCancelled)
+                      Row(
+                        children: [
+                          ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Colors.red,
@@ -185,14 +186,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
                               ),
                             ),
                             onPressed: () {
-                              saleHistoryModel.updateOrderStatus(
-                                  widget.order.id, canceOrder);
+                              Provider.of<SaleHistoryModel>(context, listen: false).cancelOrder(widget.order);
                             },
-                            child: Text('Hủy đơn')),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        ElevatedButton(
+                            child: const Text('Hủy đơn'),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
@@ -205,13 +204,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
                               ),
                             ),
                             onPressed: () {
-                              int nextStatus = (saleHistoryModel.status + 1);
-                              saleHistoryModel.updateOrderStatus(
-                                  widget.order.id, nextStatus);
+                              Provider.of<SaleHistoryModel>(context, listen: false).updateOrderStatus(widget.order.id);
                             },
-                            child: Text(saleHistoryModel.buttonText)),
-                      ],
-                    ),
+                            child: Text(saleHistoryModel.buttonText),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),

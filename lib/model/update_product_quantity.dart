@@ -2,7 +2,7 @@ class UpdateProductQuantity {
   final String oid;
   final String pid;
   final String size;
-  final String newQuantity;
+  final int newQuantity;
 
   UpdateProductQuantity({
     required this.oid,

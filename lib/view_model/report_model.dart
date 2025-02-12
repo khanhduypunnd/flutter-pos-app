@@ -8,41 +8,65 @@ import 'package:intl/intl.dart';
 import '../model/customer.dart';
 import '../model/order.dart';
 import '../model/product.dart';
+import '../shared/core/services/api.dart';
 
 class ReportModel extends ChangeNotifier {
+  final ApiService uriAPIService = ApiService();
+
   List<Order> listOrdersStore = [];
   List<Order> _listOrdersWeb = [];
   List<Product> _allProducts = [];
   List<Customer> _customers = [];
   Order? selectedOrder;
   bool _isLoading = false;
+  bool hasFetched = false;
 
   Customer? getCustomerById(String cid) {
-    return _customers.firstWhere((customer) => customer.id == cid);
+    try {
+      return _customers.firstWhere((customer) => customer.id == cid, orElse: () => Customer(id: '', name: 'Không xác định', phone: '', dob: DateTime.now(), address: '', email: '', pass: ''));
+    } catch (e) {
+      return null; 
+    }
   }
+
 
   Product? getProductById(String productId) {
     return _allProducts.firstWhere((product) => product.id == productId);
   }
 
-  Future<void> fetchOrdersStore() async {
+  Future<void> fetchOrdersStore(DateTime startDate, DateTime endDate) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/orders');
+      final url = Uri.parse(uriAPIService.apiUrlOrder);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         List<Order> allOrders =
-            jsonData.map((data) => Order.fromJson(data)).toList();
+        jsonData.map((data) => Order.fromJson(data)).toList();
 
-        List<Order> filteredOrders =
-            allOrders.where((order) => order.channel == "store").toList();
+        DateTime start =
+        DateTime(startDate.year, startDate.month, startDate.day);
+        DateTime end =
+        DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+
+        listOrdersStore.clear();
+
+        List<Order> filteredOrders = allOrders.where((order) {
+          DateTime orderDate =
+          DateTime(order.date.year, order.date.month, order.date.day);
+          return orderDate.isAfter(start.subtract(Duration(days: 1))) &&
+              orderDate.isBefore(end.add(Duration(days: 1))) &&
+              order.channel == "store";
+        }).toList();
+
+
         filteredOrders.sort((a, b) => b.date.compareTo(a.date));
         listOrdersStore = filteredOrders;
+        print(listOrdersStore.toString());
+        notifyListeners();
       } else {
         throw Exception('Failed to load orders');
       }
@@ -59,8 +83,7 @@ class ReportModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/orders');
+      final url = Uri.parse(uriAPIService.apiUrlOrder);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -69,7 +92,7 @@ class ReportModel extends ChangeNotifier {
             jsonData.map((data) => Order.fromJson(data)).toList();
 
         List<Order> filteredOrders =
-            allOrders.where((order) => order.channel == "web").toList();
+            allOrders.where((order) => order.channel == "Online").toList();
 
         if (filteredOrders.length == 0) {
           _listOrdersWeb = filteredOrders;
@@ -93,8 +116,7 @@ class ReportModel extends ChangeNotifier {
     _isLoading = true;
 
     try {
-      final url = Uri.parse(
-          'https://dacntt1-api-server-3yestp5sf-haonguyen9191s-projects.vercel.app/api/products');
+      final url = Uri.parse(uriAPIService.apiUrlProduct);
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
@@ -245,8 +267,7 @@ class ReportModel extends ChangeNotifier {
 
   // bar chart
 
-  Map<String, List<int>> getOrdersAndProductsByHour() // ✅ Đúng kiểu
-  {
+  Map<String, List<int>> getOrdersAndProductsByHour() {
     Map<int, int> ordersByHour = {};
     Map<int, int> productsByHour = {};
 
@@ -260,10 +281,8 @@ class ReportModel extends ChangeNotifier {
 
       ordersByHour[hour] = (ordersByHour[hour] ?? 0) + 1;
 
-      // Tính tổng sản phẩm trong từng orderDetail của order
       for (var detail in order.orderDetails) {
-        productsByHour[hour] =
-            (productsByHour[hour] ?? 0) + detail.quantity;
+        productsByHour[hour] = (productsByHour[hour] ?? 0) + detail.quantity;
       }
     }
 
@@ -275,6 +294,4 @@ class ReportModel extends ChangeNotifier {
       "products": productsList,
     };
   }
-
-
 }

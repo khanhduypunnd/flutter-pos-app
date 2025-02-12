@@ -3,21 +3,6 @@ import 'package:dacntt1_mobile_store/shared/core/pick_date/pick_date.dart';
 import 'package:flutter/material.dart';
 import '../../../../../model/order.dart';
 import '../order_detail/order_detail.dart';
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: OrderListScreen(),
-    );
-  }
-}
 
 class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});
@@ -30,102 +15,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
   String searchQuery = "";
 
   final List<Order> orders = [
-    Order(
-      id: '#111083',
-      sid: 'POS',
-      cid: 'MS NHI',
-      channel: 'store',
-      paymentMethod: 'Đã thanh toán',
-      totalPrice: 4085000,
-      deliveryFee: 30000,
-      discount: 0.0,
-      receivedMoney: 4085000,
-      change: 0.0,
-      actualReceived: 4085000,
-      date: DateTime.now(),
-      note: '',
-      status: 5,
-      orderDetails: [
-        // orderDetails(productId: 'P001', quantity: 1, price: 2000000),
-        // orderDetails(productId: 'P002', quantity: 1, price: 2085000),
-      ],
-    ),
-    Order(
-      id: '#111082',
-      sid: 'POS',
-      cid: 'Hậu',
-      channel: 'store',
-      paymentMethod: 'Đã thanh toán',
-      totalPrice: 2640000,
-      deliveryFee: 30000,
-      discount: 0.0,
-      receivedMoney: 2640000,
-      change: 0.0,
-      actualReceived: 2640000,
-      date: DateTime.now(),
-      note: '',
-      status: 5,
-      orderDetails: [
-        // OrderDetail(productId: 'P003', quantity: 1, price: 2640000),
-      ],
-    ),
-    Order(
-      id: '#111081',
-      sid: 'POS',
-      cid: 'CHỊ TRANG',
-      channel: 'store',
-      paymentMethod: 'Đã thanh toán',
-      totalPrice: 4065000,
-      deliveryFee: 30000,
-      discount: 0.0,
-      receivedMoney: 4065000,
-      change: 0.0,
-      actualReceived: 4065000,
-      date: DateTime.now(),
-      note: '',
-      status: 5,
-      orderDetails: [
-        // OrderDetail(productId: 'P004', quantity: 1, price: 4065000),
-      ],
-    ),
-    Order(
-      id: '#111080',
-      sid: 'POS',
-      cid: 'CHỊ TÚ',
-      channel: 'store',
-      paymentMethod: 'Đã thanh toán',
-      totalPrice: 1580000,
-      deliveryFee: 30000,
-      discount: 0.0,
-      receivedMoney: 1580000,
-      change: 0.0,
-      actualReceived: 1580000,
-      date: DateTime.now(),
-      note: '',
-      status: 5,
-      orderDetails: [
-        // OrderDetail(productId: 'P005', quantity: 1, price: 1580000),
-      ],
-    ),
-    Order(
-      id: '#111079',
-      sid: 'POS',
-      cid: 'CHỊ NHÃ THI',
-      channel: 'web',
-      paymentMethod: 'Đã thanh toán',
-      totalPrice: 1010000,
-      deliveryFee: 30000,
-      discount: 0.0,
-      receivedMoney: 1010000,
-      change: 0.0,
-      actualReceived: 1010000,
-      date: DateTime.now(),
-      note: '',
-      status: 5,
-      orderDetails: [
-        // OrderDetail(productId: 'P006', quantity: 1, price: 1010000),
-      ],
-    ),
   ];
 
   List<Order> get filteredOrders {
@@ -136,6 +25,15 @@ class _OrderListScreenState extends State<OrderListScreen> {
       return order.id.toLowerCase().contains(searchQuery.toLowerCase()) ||
           order.cid.toLowerCase().contains(searchQuery.toLowerCase());
     }).toList();
+  }
+
+  DateTime? startDate1, endDate1;
+
+  void _onDateSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      startDate1 = start;
+      endDate1 = end;
+    });
   }
 
   @override
@@ -174,7 +72,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                  child: const TimeSelection()),
+                  child: TimeSelection(onDateSelected: _onDateSelected,)),
               const Divider(),
               Expanded(
                 child: filteredOrders.isEmpty

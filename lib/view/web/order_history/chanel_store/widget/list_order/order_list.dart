@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../../../../../model/order.dart';
 import '../../../../../../shared/core/theme/colors.dart';
 import '../../../../../../shared/core/pick_date/pick_date.dart';
+import '../../../../../../view_model/sale_history_model.dart';
 
 class OrderListScreenStore extends StatefulWidget {
   final Function(Order) onOrderSelected;
@@ -32,12 +34,25 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
     }).toList();
   }
 
+  DateTime? startDate1, endDate1;
+
+  void _onDateSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      startDate1 = start ?? DateTime.now();
+      endDate1 = end ?? DateTime.now();
+    });
+
+    final saleHistoryModel = Provider.of<SaleHistoryModel>(context, listen: false);
+    saleHistoryModel.fetchOrdersStore(startDate1!, endDate1!);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Container(
-            width: MediaQuery.of(context).size.width, child: TimeSelection()),
+            width: MediaQuery.of(context).size.width, child: TimeSelection(onDateSelected: _onDateSelected,)),
         SizedBox(
           height: 10,
         ),

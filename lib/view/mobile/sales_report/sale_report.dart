@@ -25,6 +25,15 @@ class _SaleReportMobileState extends State<SaleReportMobile> {
     maxWidth = MediaQuery.of(context).size.width;
   }
 
+  DateTime? startDate1, endDate1;
+
+  void _onDateSelected(DateTime? start, DateTime? end) {
+    setState(() {
+      startDate1 = start;
+      endDate1 = end;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isChange_tab = maxWidth > 900;
@@ -35,9 +44,9 @@ class _SaleReportMobileState extends State<SaleReportMobile> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const Row(
+              Row(
                 children: [
-                  TimeSelection()
+                  TimeSelection(onDateSelected: _onDateSelected),
                 ],
               ),
               const SizedBox(height: 20),

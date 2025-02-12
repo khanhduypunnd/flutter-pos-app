@@ -1,24 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../../../shared/core/theme/colors.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: TimeSelection(),
-    );
-  }
-}
+import '../theme/colors.dart';
 
 class TimeSelection extends StatefulWidget {
-  const TimeSelection({super.key});
+  final Function(DateTime?, DateTime?) onDateSelected;
+  const TimeSelection({super.key, required this.onDateSelected});
 
   @override
   State<TimeSelection> createState() => _TimeSelectionContainerState();
@@ -52,7 +38,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
         child: DropdownButton<String>(
           value: selectedDate,
           elevation: 16,
-          style: const TextStyle(color: Colors.blueAccent),
+          style: const TextStyle(color: Colors.deepPurple),
           underline: Container(
             height: 0,
           ),
@@ -62,7 +48,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
             });
             _handleDateSelection(newValue!);
           },
-          items: <String>['Hôm nay', 'Hôm qua','Tháng này', 'Tháng trước', 'Tùy chỉnh']
+          items: <String>['Hôm nay', 'Hôm qua', '7 ngày trước', '30 ngày trước', 'Tháng này', 'Tháng trước', 'Tùy chỉnh']
               .map<DropdownMenuItem<String>>((String value) {
             return DropdownMenuItem<String>(
               value: value,
@@ -80,47 +66,45 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
 
   void _handleDateSelection(String value) {
     DateTime now = DateTime.now();
+    DateTime today = DateTime(now.year, now.month, now.day);
+
     switch (value) {
       case 'Hôm nay':
-        setState(() {
-          startDate = now;
-          endDate = now;
-        });
+        startDate = today;
+        endDate = today;
         break;
-      case 'Ngày hôm qua':
-        setState(() {
-          startDate = now.subtract(Duration(days: 1));
-          endDate = now.subtract(Duration(days: 1));
-        });
+      case 'Hôm qua':
+        startDate = today.subtract(Duration(days: 1));
+        endDate = today.subtract(Duration(days: 1));
         break;
       case '7 ngày trước':
-        setState(() {
-          startDate = now.subtract(Duration(days: 7));
-          endDate = now.subtract(Duration(days: 1));
-        });
+        startDate = today.subtract(Duration(days: 7));
+        endDate = today.subtract(Duration(days: 1));
         break;
       case 'Tháng này':
-        setState(() {
-          startDate = DateTime(now.year, now.month, 1);
-          endDate = DateTime(now.year, now.month + 1, 0);
-        });
+        startDate = DateTime(today.year, today.month, 1);
+        endDate = DateTime(today.year, today.month + 1, 0);
         break;
       case 'Tháng trước':
-        setState(() {
-          startDate = DateTime(now.year, now.month - 1, 1);
-          endDate = DateTime(now.year, now.month, 0);
-        });
+        startDate = DateTime(today.year, today.month - 1, 1);
+        endDate = DateTime(today.year, today.month, 0);
+        break;
+      case '30 ngày trước':
+        startDate = today.subtract(Duration(days: 30));
+        endDate = today.subtract(Duration(days: 1));
         break;
       case 'Tùy chỉnh':
         _showCustomDatePicker(context);
-        break;
-      default:
-        setState(() {
-          startDate = now;
-          endDate = now;
-        });
+        return;
     }
+
+    setState(() {
+      selectedDate = value;
+    });
+
+    widget.onDateSelected(startDate, endDate);
   }
+
 
   Future<void> _showCustomDatePicker(BuildContext context) async {
     showDialog(
@@ -131,12 +115,12 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
 
         return AlertDialog(
           backgroundColor: Colors.white,
-          title: const Text('Chọn khoảng thời gian'),
+          title: const Text('Chọn khoảng thời gian', style: TextStyle(color: AppColors.titleColor),),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: const Text('Chọn ngày bắt đầu'),
+                title: const Text('Chọn ngày bắt đầu', style: TextStyle(color: AppColors.titleColor)),
                 trailing: IconButton(
                   icon: const Icon(Icons.calendar_today),
                   onPressed: () async {
@@ -150,7 +134,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
                 ),
               ),
               ListTile(
-                title: const Text('Chọn ngày kết thúc'),
+                title: const Text('Chọn ngày kết thúc', style: TextStyle(color: AppColors.titleColor)),
                 trailing: IconButton(
                   icon: const Icon(Icons.calendar_today),
                   onPressed: () async {
@@ -170,7 +154,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Hủy', style: TextStyle(color: Colors.red),),
+              child: const Text('Hủy', style: TextStyle(color: Colors.red)),
             ),
             TextButton(
               onPressed: () {
@@ -179,11 +163,12 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
                     startDate = tempStartDate;
                     endDate = tempEndDate;
                     selectedDate = 'Tùy chỉnh';
+                    widget.onDateSelected(startDate, endDate);
                   });
                   Navigator.pop(context);
                 }
               },
-              child: const Text('Áp dụng', style: TextStyle(color: Colors.blueAccent),),
+              child: const Text('Áp dụng', style: TextStyle(color: Colors.blueAccent)),
             ),
           ],
         );

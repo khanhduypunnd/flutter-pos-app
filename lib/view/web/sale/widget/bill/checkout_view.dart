@@ -17,16 +17,8 @@ class PaymentMethod {
 }
 
 class CheckoutView extends StatefulWidget {
-  // final double totalAmount;
-  // final Function(String, double, double, String, double, double, double)
-  //     getMoneyCallback;
-  // final Function(bool) onReceivedMoney;
   const CheckoutView(
-      {super.key,
-      // required this.totalAmount,
-      // required this.getMoneyCallback,
-      // required this.onReceivedMoney
-      });
+      {super.key,});
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
@@ -39,6 +31,7 @@ class _CheckoutViewState extends State<CheckoutView> {
     super.initState();
     Future.microtask(() {
       Provider.of<SaleViewModel>(context, listen: false).fetchCustomers();
+      Provider.of<SaleViewModel>(context, listen: false).updateControllers();
     });
   }
 
@@ -46,7 +39,7 @@ class _CheckoutViewState extends State<CheckoutView> {
   Widget build(BuildContext context) {
     final saleViewModel = Provider.of<SaleViewModel>(context);
 
-    saleViewModel.updateControllers();
+    // saleViewModel.updateControllers();
 
     bool checkSelectedCustomer = saleViewModel.selectedCustomerName.isNotEmpty;
 

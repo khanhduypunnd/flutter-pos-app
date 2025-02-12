@@ -19,12 +19,17 @@ class _OrderListViewStoreState extends State<OrderListViewStore> {
 
   late SaleHistoryModel saleHistoryModel;
 
+  DateTime? startDate1, endDate1;
+
+
   @override
   void initState() {
     super.initState();
+    startDate1 = DateTime.now();
+    endDate1 = DateTime.now();
     Future.microtask(() {
       final model = Provider.of<SaleHistoryModel>(context, listen: false);
-      model.fetchOrdersStore().then((_) {
+      model.fetchOrdersStore(startDate1!, endDate1!).then((_) {
         model.fetchCustomers();
         model.fetchProducts();
         if (model.ordersStore.isNotEmpty) {

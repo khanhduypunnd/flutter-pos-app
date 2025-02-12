@@ -1,5 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../../../../shared/core/theme/colors.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -61,7 +64,6 @@ class _CustomerDialogState extends State<CustomerDialog> {
     }
   }
 
-
   void showCustomToast(BuildContext context, String message) {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
@@ -109,8 +111,9 @@ class _CustomerDialogState extends State<CustomerDialog> {
   }
 
   String generateGanId(int currentId) {
-    final String formattedId = currentId.toString().padLeft(6, '0');
-    return 'C$formattedId';
+    String timestamp = DateFormat('yyyyMMddHHmmss').format(DateTime.now());
+    String randomDigits = Random().nextInt(999).toString().padLeft(3, '0');
+    return 'C$timestamp$randomDigits';
   }
 
   Future<void> saveCurrentId(int currentId) async {
@@ -145,7 +148,7 @@ class _CustomerDialogState extends State<CustomerDialog> {
       print('Dữ liệu JSON: ${json.encode(customer)}');
 
 
-      final url = Uri.parse('https://dacntt1-api-server-baukpbwdh-haonguyen9191s-projects.vercel.app/api/customers/register');
+      final url = Uri.parse('https://dacntt1-api-server-5nhee8ay7-haonguyen9191s-projects.vercel.app/api/customers/register');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},

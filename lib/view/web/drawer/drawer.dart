@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../view_model/login.dart';
 import '../../icon_pictures.dart';
 import 'package:go_router/go_router.dart';
 
 class DrawerMenu extends StatelessWidget {
   final String selectedPage;
   final ValueChanged<String> onPageSelected;
+  final List<int>? roleDetail;
 
   DrawerMenu({
     required this.selectedPage,
     required this.onPageSelected,
+    this.roleDetail,
   });
 
   @override
@@ -19,31 +23,19 @@ class DrawerMenu extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // DrawerHeader(
-            //   child: Column(
-            //     mainAxisAlignment: MainAxisAlignment.center,
-            //     children: [
-            //       Image.asset(logo_app.logo_size100, width: 80, height: 80),
-            //       const SizedBox(height: 10),
-            //       const Text(
-            //         "Hupe Store",
-            //         style: TextStyle(
-            //           fontSize: 18,
-            //           color: Colors.white,
-            //           fontWeight: FontWeight.bold,
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
             Image.asset(logo_app.logo_size100, width: 80, height: 80),
             const SizedBox(height: 10),
-            _buildDrawerItem(
-              context,
-              title: 'Bán hàng',
-              icon: Icons.shopping_cart_outlined,
-              route: '/sale',
-            ),
+            if (roleDetail == null ||
+                roleDetail!.isEmpty ||
+                roleDetail![0] == 0)
+              _buildDrawerItem(
+                context,
+                title: 'Bán hàng',
+                icon: Icons.shopping_cart_outlined,
+                route: '/sale',
+              )
+            else
+              _buildNoAccessItem('Bạn không có quyền truy cập'),
             _buildDrawerItem(
               context,
               title: 'Tất cả đơn hàng',
@@ -56,21 +48,29 @@ class DrawerMenu extends StatelessWidget {
               icon: Icons.web_outlined,
               route: '/onlineorders',
             ),
-            _buildDrawerItem(
-              context,
-              title: 'Báo cáo bán hàng',
-              icon: Icons.insert_chart_outlined,
-              route: '/salesreport',
-            ),
+            if (roleDetail == null ||
+                roleDetail!.isEmpty ||
+                roleDetail![roleDetail!.length - 2] == 0)
+              _buildDrawerItem(
+                context,
+                title: 'Báo cáo bán hàng',
+                icon: Icons.insert_chart_outlined,
+                route: '/salesreport',
+              )
+            else
+              _buildNoAccessItem('Bạn không có quyền truy cập'),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text(
                 "Đăng xuất",
-                style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: Colors.redAccent, fontWeight: FontWeight.bold),
               ),
               onTap: () {
-                // Xử lý đăng xuất
-                Navigator.pop(context);
+                final loginModel =
+                    Provider.of<LoginModel>(context, listen: false);
+                loginModel.logout(context);
+                // Navigator.pop(context);
               },
             ),
           ],
@@ -80,11 +80,11 @@ class DrawerMenu extends StatelessWidget {
   }
 
   Widget _buildDrawerItem(
-      BuildContext context, {
-        required String title,
-        required IconData icon,
-        required String route,
-      }) {
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required String route,
+  }) {
     return ListTile(
       leading: Icon(
         icon,
@@ -94,7 +94,8 @@ class DrawerMenu extends StatelessWidget {
         title,
         style: TextStyle(
           color: selectedPage == route ? Colors.black : Colors.black54,
-          fontWeight: selectedPage == route ? FontWeight.bold : FontWeight.normal,
+          fontWeight:
+              selectedPage == route ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       onTap: () {
@@ -103,6 +104,17 @@ class DrawerMenu extends StatelessWidget {
         Navigator.pop(context);
       },
       selected: selectedPage == route,
+    );
+  }
+
+  Widget _buildNoAccessItem(String message) {
+    return ListTile(
+      leading: const Icon(Icons.block, color: Colors.redAccent),
+      title: Text(
+        message,
+        style: const TextStyle(
+            color: Colors.redAccent, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }
