@@ -43,12 +43,12 @@ class Order {
       cid: order['cid'] ?? '',
       channel: order['channel'] ?? '',
       paymentMethod: order['paymentMethod'] ?? '',
-      totalPrice: double.parse(order['totalPrice']?.toString() ?? '0.0') ?? 0.0,
-      deliveryFee: double.parse(order['deliveryFee']?.toString() ?? '0.0') ?? 0.0,
-      discount: double.parse(order['discount']?.toString() ?? '0.0') ?? 0.0,
-      receivedMoney: double.parse(order['receivedMoney']?.toString() ?? '0.0') ?? 0.0,
-      change: double.parse(order['change']?.toString() ?? '0.0') ?? 0.0,
-      actualReceived: double.parse(order['actualReceived']?.toString() ?? '0.0') ?? 0.0,
+      totalPrice: (order['totalPrice'] ?? 0).toDouble(),
+      deliveryFee: (order['deliveryFee'] ?? 0).toDouble(),
+      discount: (order['discount'] ?? 0).toDouble(),
+      receivedMoney: (order['receivedMoney'] ?? 0).toDouble(),
+      change: (order['change'] ?? 0).toDouble(),
+      actualReceived: (order['actualReceived'] ?? 0).toDouble(),
       date: DateTime.fromMillisecondsSinceEpoch(order['date']['_seconds'] * 1000).toUtc(),
       note: order['note'] ?? '',
       status: int.parse(order['status'].toString()),
@@ -145,7 +145,7 @@ class OrderDetail {
       productId: json['productId'],
       size: json['size'],
       quantity: json['quantity'],
-      price: json['price'],
+      price: json['price'].toDouble(),
     );
   }
 
