@@ -34,18 +34,24 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-    if (kIsWeb) {
-      return MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'Hupe Store - Web',
-        routerConfig: AppRouter.router,
-      );
-    } else {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Hupe Store - Mobile',
-        home: HomeMobile(navigatorKey: navigatorKey)
-      );
-    }
+
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'Hupe Store - Web',
+      routerConfig: AppRouter.router,
+    );
+    // if (kIsWeb) {
+    //   return MaterialApp.router(
+    //     debugShowCheckedModeBanner: false,
+    //     title: 'Hupe Store - Web',
+    //     routerConfig: AppRouter.router,
+    //   );
+    // } else {
+    //   return MaterialApp(
+    //     debugShowCheckedModeBanner: false,
+    //     title: 'Hupe Store - Mobile',
+    //     home: HomeMobile(navigatorKey: navigatorKey)
+    //   );
+    // }
   }
 }

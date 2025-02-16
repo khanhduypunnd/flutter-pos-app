@@ -22,15 +22,11 @@ class _MainScreenState extends State<CartFullView> {
   late double maxWidth;
   final String employee = 'kduy';
 
-
   @override
   void didChangeDependencies() {
     // TODO: implement didChangeDependencies
     super.didChangeDependencies();
     maxWidth = MediaQuery.of(context).size.width;
-
-    print("📌 staffData nhận được trong CartFullView: ${widget.staffData}");
-
   }
 
   @override
@@ -45,15 +41,17 @@ class _MainScreenState extends State<CartFullView> {
         ? List<int>.from(widget.staffData!['role_detail'])
         : null;
 
-    bool canAccessSale = roleDetail == null || roleDetail.isEmpty || roleDetail[0] == 0;
+    bool canAccessSale =
+        roleDetail == null || roleDetail.isEmpty || roleDetail[0] == 0;
 
     if (!canAccessSale) {
       return const Scaffold(
         backgroundColor: AppColors.backgroundColor,
         body: Center(
           child: Text(
-            "🚫 Bạn không có quyền truy cập vào trang này",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
+            "Bạn không có quyền truy cập vào trang này",
+            style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
           ),
         ),
       );

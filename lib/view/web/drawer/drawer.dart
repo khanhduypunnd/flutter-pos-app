@@ -8,11 +8,13 @@ class DrawerMenu extends StatelessWidget {
   final String selectedPage;
   final ValueChanged<String> onPageSelected;
   final List<int>? roleDetail;
+  final Map<String, dynamic>? staffData;
 
   DrawerMenu({
     required this.selectedPage,
     required this.onPageSelected,
     this.roleDetail,
+    this.staffData,
   });
 
   @override
@@ -100,10 +102,10 @@ class DrawerMenu extends StatelessWidget {
       ),
       onTap: () {
         onPageSelected(route);
-        context.go(route);
+        context.go(route, extra: staffData);
         Navigator.pop(context);
       },
-        selected: selectedPage == route,
+      selected: selectedPage == route,
     );
   }
 

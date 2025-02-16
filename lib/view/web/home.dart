@@ -83,11 +83,9 @@ class _HomeScreenState extends State<HomeWeb>
           context.go(route);
         },
         roleDetail: roleDetail,
+        staffData: staffData,
       ),
       body:
-          // _selectedPage == '/sale'
-          //     ? CartFullView(staffData: widget.staffData)
-          //     :
           widget.child,
     );
   }

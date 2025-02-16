@@ -83,6 +83,7 @@ class _SaleReportState extends State<SaleReport> {
         ? List<int>.from(widget.staffData!['role_detail'])
         : null;
 
+    print(widget.staffData?['role_detail']);
     bool canAccessSalesReport = roleDetail == null ||
         roleDetail.isEmpty ||
         roleDetail[roleDetail.length - 2] == 0;

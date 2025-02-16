@@ -33,8 +33,6 @@ class LoginModel extends ChangeNotifier{
 
       final data = jsonDecode(response.body);
 
-      print(data);
-
       if (response.statusCode == 200) {
         token = data['token'];
 
