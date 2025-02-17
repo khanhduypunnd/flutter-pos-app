@@ -2,6 +2,7 @@ import 'package:dacntt1_mobile_store/model/update_product_quantity.dart';
 import 'package:dacntt1_mobile_store/view_model/sale_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../../model/order.dart';
 import 'dart:convert';
@@ -48,6 +49,29 @@ class OrderNoteAndButton extends StatefulWidget {
 class _OrderNoteAndButtonState extends State<OrderNoteAndButton> {
   get productQuantities => null;
   //
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      final saleViewModel = Provider.of<SaleViewModel>(context);
+      await Hive.openBox('orderNote');
+      saleViewModel.noteController.text = Hive.box('orderNote').get('note', defaultValue: '');
+    });
+  }
+
+  void _saveNote() {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+    Hive.box('orderNote').put('note', saleViewModel.noteController.text);
+  }
+
+  @override
+  void dispose() {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+    saleViewModel.noteController.dispose();
+    Hive.box('orderNote').close();
+    super.dispose();
+  }
 
 
   @override

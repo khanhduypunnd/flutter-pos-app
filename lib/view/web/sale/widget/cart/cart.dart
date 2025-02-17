@@ -10,24 +10,25 @@ import '../../../../../view_model/sale_model.dart';
 class CartView extends StatefulWidget {
   final String employee;
 
-  const CartView(
-      {super.key,
-      required this.employee
-      });
+  const CartView({super.key, required this.employee});
 
   @override
   State<CartView> createState() => _CartViewState();
 }
 
 class _CartViewState extends State<CartView> {
-
-
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       Provider.of<SaleViewModel>(context, listen: false).fetchProducts();
     });
+  }
+
+  @override
+  void dispose() {
+    Provider.of<SaleViewModel>(context, listen: false).searchProductController.dispose();
+    super.dispose();
   }
 
   @override
@@ -71,6 +72,11 @@ class _CartViewState extends State<CartView> {
                             : null,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Colors.blueAccent, width: 2),
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
                     ),
@@ -124,8 +130,9 @@ class _CartViewState extends State<CartView> {
                                       setState(() {
                                         String key =
                                             '${product.id}_${product.sizes[sizeIndex]}';
-                                        int currentQuantity =
-                                            saleViewModel.productQuantities[key] ?? 1;
+                                        int currentQuantity = saleViewModel
+                                                .productQuantities[key] ??
+                                            1;
                                         if (currentQuantity > 1) {
                                           saleViewModel.productQuantities[key] =
                                               currentQuantity - 1;
@@ -149,8 +156,9 @@ class _CartViewState extends State<CartView> {
                                       setState(() {
                                         String key =
                                             '${product.id}_${product.sizes[sizeIndex]}';
-                                        int currentQuantity =
-                                            saleViewModel.productQuantities[key] ?? 1;
+                                        int currentQuantity = saleViewModel
+                                                .productQuantities[key] ??
+                                            1;
                                         int maxQuantity =
                                             product.quantities[sizeIndex];
                                         if (currentQuantity < maxQuantity) {
@@ -171,7 +179,9 @@ class _CartViewState extends State<CartView> {
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        saleViewModel.removeFromSelectedProducts(product);
+                                        saleViewModel
+                                            .removeFromSelectedProducts(
+                                                product);
                                       });
                                     },
                                   ),
@@ -291,12 +301,15 @@ class _CartViewState extends State<CartView> {
                                                 );
                                                 saleViewModel.selectedProducts
                                                     .add(selectedProduct);
-                                                saleViewModel.updateSelectedProducts();
+                                                saleViewModel
+                                                    .updateSelectedProducts();
                                                 saleViewModel
                                                     .calculateTotalPrice();
-                                                saleViewModel.selectedProductstoNote();
+                                                saleViewModel
+                                                    .selectedProductstoNote();
                                               }
-                                              saleViewModel.clearProductSearch();
+                                              saleViewModel
+                                                  .clearProductSearch();
                                             });
                                           }
                                         : null,

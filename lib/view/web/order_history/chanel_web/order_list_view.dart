@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
 import '../../../../view_model/sale_history_model.dart';
 
 import '../../../../../shared/core/theme/colors.dart';
@@ -20,13 +19,13 @@ class OrderListViewWeb extends StatefulWidget {
 class _OrderListViewStoreState extends State<OrderListViewWeb> {
   bool _isFetched = false;
 
-
   @override
   void initState() {
     super.initState();
 
     Future.microtask(() {
-      final saleHistoryModel = Provider.of<SaleHistoryModel>(context, listen: false);
+      final saleHistoryModel =
+          Provider.of<SaleHistoryModel>(context, listen: false);
 
       if (!_isFetched) {
         _isFetched = true;
@@ -53,7 +52,6 @@ class _OrderListViewStoreState extends State<OrderListViewWeb> {
       }
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -94,8 +92,7 @@ class _OrderListViewStoreState extends State<OrderListViewWeb> {
                         ),
                         child: saleHistoryModel.selectedOrder != null
                             ? OrderDetailScreenWeb(
-                                order: saleHistoryModel.selectedOrder!,
-                              )
+                                order: saleHistoryModel.selectedOrder!)
                             : const Center(
                                 child: Text(
                                   'Vui lòng chọn một đơn hàng để xem chi tiết.',

@@ -1,9 +1,15 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/adapters.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../model/product.dart';
@@ -36,7 +42,7 @@ class SaleViewModel with ChangeNotifier {
 
   //cart
   final List<Product> allProducts = [];
-  final List<Product> selectedProducts = [];
+  List<Product> selectedProducts = [];
   final TextEditingController searchProductController = TextEditingController();
   List<Product> filteredProducts = [];
   bool isProductSearching = false;
@@ -79,6 +85,7 @@ class SaleViewModel with ChangeNotifier {
   //function in parent widget
   void updateTotalPrice(double total) {
     totalAmount = total;
+    // _saveToHive();
     notifyListeners();
   }
 
@@ -193,6 +200,8 @@ class SaleViewModel with ChangeNotifier {
       calculateTotalPrice();
       selectedProductstoNote();
     }
+    isProductSearching = false;
+    notifyListeners();
   }
 
   void removeFromSelectedProducts(Product product) {
@@ -200,6 +209,8 @@ class SaleViewModel with ChangeNotifier {
     updateSelectedProducts();
     calculateTotalPrice();
     selectedProductstoNote();
+    updateControllers();
+    notifyListeners();
   }
 
   void clearAllSelectedProducts() {
@@ -207,6 +218,8 @@ class SaleViewModel with ChangeNotifier {
     updateSelectedProducts();
     calculateTotalPrice();
     selectedProductstoNote();
+    updateControllers();
+    notifyListeners();
   }
 
   //check out
@@ -279,7 +292,8 @@ class SaleViewModel with ChangeNotifier {
   void updatePaymentMethod(String method) {
     selectedPaymentMethod = method;
     paymentMethod = method;
-    notifyListeners();;
+    // _saveToHive();
+    notifyListeners();
   }
 
 
@@ -289,7 +303,7 @@ class SaleViewModel with ChangeNotifier {
   }
 
   double calculateTotalDue() {
-    return totalAmount + shippingFee - discount;
+    return totalAmount + deliveryFee - discount;
   }
 
   double calculateChange() {
@@ -312,14 +326,14 @@ class SaleViewModel with ChangeNotifier {
     shippingFeeController.text = shippingFee;
     deliveryFee =
         (double.tryParse(shippingFee.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0);
-    // getMoney;
+    updateControllers();
     notifyListeners();
   }
 
   void updatePromotion(String promotion) {
       discountController.text = promotion;
       discount = double.tryParse(promotion) ?? 0;
-      // getMoney;
+      updateControllers();
       notifyListeners();
   }
 
@@ -352,6 +366,8 @@ class SaleViewModel with ChangeNotifier {
   double calculateTotalPrice() {
     double total = 0.0;
     if (selectedProducts.isEmpty) {
+      updateTotalPrice(total);
+      updateControllers();
       return total;
     }
 
@@ -362,7 +378,13 @@ class SaleViewModel with ChangeNotifier {
         total += product.sellPrices[i] * currentQuantity;
       }
     }
+
     updateTotalPrice(total);
+    updateControllers();
+
+    totalAmountController.text = formatPrice(totalAmount);
+    totalPayController.text = formatPrice(calculateTotalDue());
+    notifyListeners();
     return total;
   }
 
@@ -424,6 +446,7 @@ class SaleViewModel with ChangeNotifier {
         }
 
         currentId++;
+        await fetchProducts();
         await saveCurrentId(currentId);
       } else {
         if (kDebugMode) {
@@ -526,8 +549,29 @@ class SaleViewModel with ChangeNotifier {
     } else if (!canProceedToPayment2) {
       showCustomToast(context, 'Vui lòng nhập số tiền khách đưa');
     } else {
-      sendOrder().then((_) {
+      sendOrder().then((_) async {
         selectedProductstoNote();
+        int currentId = await loadCurrentId();
+        String newOrderId = generateOrderId(currentId);
+        Order newOrder = Order(
+            id: newOrderId,
+            oid: newOrderId,
+            sid: sid,
+            cid: customerId,
+            channel: channel,
+            paymentMethod: paymentMethod,
+            totalPrice: totalAmount,
+            deliveryFee: deliveryFee,
+            discount: discount,
+            receivedMoney: receivedMoney,
+            change: change,
+            actualReceived: actualReceived,
+            note: noteController.text,
+            date: DateTime.now(),
+            orderDetails: orderDetails,
+            status: status
+        );
+        printOrderBill(newOrder);
         return updateProductQuantities(updateQuantity);
       }).then((_) async {
         clearAll();
@@ -587,6 +631,64 @@ class SaleViewModel with ChangeNotifier {
     });
   }
 
+  Future<void> printOrderBill(Order order) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('HÓA ĐƠN BÁN HÀNG',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  )),
+              pw.SizedBox(height: 20),
+              pw.Text('Mã đơn hàng: ${order.id}'),
+              pw.Text('Ngày: ${order.date.toIso8601String()}'),
+              pw.Text('Phương thức thanh toán: ${order.paymentMethod}'),
+              pw.Text('Kênh bán hàng: ${order.channel}'),
+              pw.SizedBox(height: 20),
+              pw.Text('Chi tiết đơn hàng:',
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  )),
+              pw.Table.fromTextArray(
+                headers: ['Mã SP', 'Size', 'Số lượng', 'Giá'],
+                data: order.orderDetails.map((detail) {
+                  return [
+                    detail.productId,
+                    detail.size,
+                    detail.quantity.toString(),
+                    detail.price.toStringAsFixed(2),
+                  ];
+                }).toList(),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text('Tổng tiền hàng: ${order.totalPrice.toStringAsFixed(2)}'),
+              pw.Text('Phí vận chuyển: ${order.deliveryFee.toStringAsFixed(2)}'),
+              pw.Text('Khuyến mãi: ${order.discount.toStringAsFixed(2)}'),
+              pw.Text('Tiền khách đưa: ${order.receivedMoney.toStringAsFixed(2)}'),
+              pw.Text('Tiền thừa trả khách: ${order.change.toStringAsFixed(2)}'),
+              pw.Text('Thực nhận: ${order.actualReceived.toStringAsFixed(2)}'),
+              pw.SizedBox(height: 20),
+              pw.Text('Ghi chú: ${order.note}'),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+  }
+
+
   void clearAll() {
     selectedProducts.clear();
     orderDetails.clear();
@@ -620,4 +722,61 @@ class SaleViewModel with ChangeNotifier {
     sid = '';
       notifyListeners();
   }
+
+
+  Future<void> initHive() async {
+    await Hive.initFlutter();
+    await Hive.openBox('saleData');
+    _loadStoredData();
+  }
+
+  void _loadStoredData() {
+    final box = Hive.box('saleData');
+
+    selectedCustomerName = box.get('selectedCustomerName', defaultValue: '');
+    selectedCustomerPhone = box.get('selectedCustomerPhone', defaultValue: '');
+    selectedPaymentMethod = box.get('selectedPaymentMethod', defaultValue: 'Tiền mặt');
+    totalAmount = box.get('totalAmount', defaultValue: 0.0);
+    deliveryFee = box.get('deliveryFee', defaultValue: 0.0);
+    discount = box.get('discount', defaultValue: 0.0);
+    receivedMoney = box.get('receivedMoney', defaultValue: 0.0);
+    change = box.get('change', defaultValue: 0.0);
+    actualReceived = box.get('actualReceived', defaultValue: 0.0);
+    customerPay = box.get('customerPay', defaultValue: 0.0);
+
+    notifyListeners();
+  }
+
+  void _saveToHive() {
+    final box = Hive.box('saleData');
+
+    box.put('selectedCustomerName', selectedCustomerName);
+    box.put('selectedCustomerPhone', selectedCustomerPhone);
+    box.put('selectedPaymentMethod', selectedPaymentMethod);
+    box.put('totalAmount', totalAmount);
+    box.put('deliveryFee', deliveryFee);
+    box.put('discount', discount);
+    box.put('receivedMoney', receivedMoney);
+    box.put('change', change);
+    box.put('actualReceived', actualReceived);
+    box.put('customerPay', customerPay);
+  }
+
+
+
+  @override
+  void dispose() {
+    searchProductController.dispose();
+    searchCustomerController.dispose();
+    totalAmountController.dispose();
+    totalPayController.dispose();
+    customerPayController.dispose();
+    shippingFeeController.dispose();
+    discountController.dispose();
+    changeController.dispose();
+    actualReceivedController.dispose();
+    noteController.dispose();
+    super.dispose();
+  }
+
 }

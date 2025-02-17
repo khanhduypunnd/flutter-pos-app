@@ -1,6 +1,8 @@
 import 'package:dacntt1_mobile_store/model/product.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../view_model/sale_model.dart';
 import 'widget/cart/cart.dart';
@@ -21,6 +23,37 @@ class CartFullView extends StatefulWidget {
 class _MainScreenState extends State<CartFullView> {
   late double maxWidth;
   final String employee = 'kduy';
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() async {
+      await Hive.initFlutter();
+      await Hive.openBox('cartData');
+    });
+  }
+
+  void saveCartData() {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+    final box = Hive.box('cartData');
+    box.put('selectedProducts', saleViewModel.selectedProducts.map((e) => e.toJson()).toList());
+  }
+
+  void loadCartData() {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+    final box = Hive.box('cartData');
+    List<dynamic>? storedProducts = box.get('selectedProducts');
+    if (storedProducts != null) {
+      saleViewModel.selectedProducts = storedProducts.map((e) => Product.fromJson(e)).toList();
+      saleViewModel.calculateTotalPrice();
+    }
+  }
+
+  @override
+  void dispose() {
+    Hive.box('cartData').close();
+    super.dispose();
+  }
 
   @override
   void didChangeDependencies() {

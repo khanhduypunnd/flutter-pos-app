@@ -120,6 +120,10 @@ class SaleHistoryModel extends ChangeNotifier {
         for (var order in allOrders) {
           DateTime orderDate =
           DateTime(order.date.year, order.date.month, order.date.day);
+
+          print("Checking order: ${order.id}, Status: ${order.status}, Channel: ${order.channel}");
+
+
           if (order.channel == "Online") {
             switch (order.status) {
               case 0:
@@ -151,7 +155,7 @@ class SaleHistoryModel extends ChangeNotifier {
         _listOrdersWeb4.sort((a, b) => a.date.compareTo(b.date));
         _listOrdersWeb5.sort((a, b) => a.date.compareTo(b.date));
 
-        notifyListeners();
+
       } else {
         if (kDebugMode) {
           print('Lỗi khi lấy dữ liệu đơn hàng: ${response.statusCode}');
@@ -227,7 +231,7 @@ class SaleHistoryModel extends ChangeNotifier {
 
   void onOrderSelected(Order order) {
     selectedOrder = order;
-    print(selectedOrder.toString());
+    _status = order.status;
     notifyListeners();
   }
 
@@ -292,6 +296,7 @@ class SaleHistoryModel extends ChangeNotifier {
 
     int newStatus = currentStatus + 1;
     order.status = newStatus;
+    _status = newStatus;
     allOrderLists[newStatus].add(order);
 
 
@@ -421,7 +426,7 @@ class SaleHistoryModel extends ChangeNotifier {
 
           final sizeIndex = productData["sizes"].indexOf(detail.size);
           if (sizeIndex == -1) {
-            print('⚠ Size ${detail.size} không tồn tại trong sản phẩm ${detail.pid}');
+            print('Size ${detail.size} không tồn tại trong sản phẩm ${detail.pid}');
             continue;
           }
 
@@ -441,7 +446,7 @@ class SaleHistoryModel extends ChangeNotifier {
             }
           } else {
             if (kDebugMode) {
-              print("❌ Lỗi khi cập nhật sản phẩm ${detail.pid}: ${responseUpdate.statusCode}");
+              print("Lỗi khi cập nhật sản phẩm ${detail.pid}: ${responseUpdate.statusCode}");
             }
           }
         } else {

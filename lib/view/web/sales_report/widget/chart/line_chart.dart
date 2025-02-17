@@ -90,7 +90,7 @@ class BarLineChart extends StatelessWidget {
     return [
       LineChartBarData(
         spots: scaleSpots(netRevenue, scaleFactor),
-        isCurved: true,
+        isCurved: false,
         color: Colors.blue,
         barWidth: 2,
         isStrokeCapRound: true,
@@ -99,7 +99,7 @@ class BarLineChart extends StatelessWidget {
       ),
       LineChartBarData(
         spots: scaleSpots(collected, scaleFactor),
-        isCurved: true,
+        isCurved: false,
         color: Colors.green,
         barWidth: 2,
         isStrokeCapRound: true,
@@ -108,8 +108,8 @@ class BarLineChart extends StatelessWidget {
       ),
       LineChartBarData(
         spots: scaleSpots(actualReceived, scaleFactor),
-        isCurved: true,
-        color: Colors.orange,
+        isCurved: false,
+        color: Colors.purple,
         barWidth: 2,
         isStrokeCapRound: true,
         dotData: const FlDotData(show: false),

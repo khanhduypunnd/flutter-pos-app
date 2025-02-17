@@ -93,7 +93,7 @@ class _SaleReportState extends State<SaleReport> {
         backgroundColor: Colors.grey.shade200,
         body: const Center(
           child: Text(
-            "🚫 Bạn không có quyền truy cập vào trang này",
+            "Bạn không có quyền truy cập vào trang này",
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
           ),
         ),

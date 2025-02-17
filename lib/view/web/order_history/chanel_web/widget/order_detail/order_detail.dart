@@ -57,6 +57,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
     }).toList();
 
     final bool isCancelled = widget.order.status == 5;
+    final bool isCompleted = widget.order.status >= 3;
     return Padding(
       padding: const EdgeInsets.all(15.0),
       child: Scaffold(
@@ -170,7 +171,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreenWeb> {
                             ? widget.order.note
                             : 'Không có ghi chú.',
                         style: TextStyle(fontSize: 14)),
-                    if (!isCancelled)
+                    if (!isCancelled && !isCompleted)
                       Row(
                         children: [
                           ElevatedButton(

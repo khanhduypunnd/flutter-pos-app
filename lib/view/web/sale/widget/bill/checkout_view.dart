@@ -2,6 +2,7 @@ import 'package:dacntt1_mobile_store/shared/core/core.dart';
 import 'package:dacntt1_mobile_store/view/web/sale/widget/bill/widget/promotion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 import '../../../../../view_model/sale_model.dart';
 import 'widget/new_customer.dart';
 import 'widget/shipping.dart';
@@ -17,31 +18,65 @@ class PaymentMethod {
 }
 
 class CheckoutView extends StatefulWidget {
-  const CheckoutView(
-      {super.key,});
+  const CheckoutView({
+    super.key,
+  });
 
   @override
   State<CheckoutView> createState() => _CheckoutViewState();
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
+  late double maxWidth = 0.0;
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       Provider.of<SaleViewModel>(context, listen: false).fetchCustomers();
       Provider.of<SaleViewModel>(context, listen: false).updateControllers();
+      await Hive.openBox('checkoutData');
+      _loadCheckoutData();
     });
+  }
+
+  void _loadCheckoutData() {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+    final box = Hive.box('checkoutData');
+    saleViewModel.selectedCustomerName = box.get('selectedCustomerName', defaultValue: '');
+    saleViewModel.selectedCustomerPhone = box.get('selectedCustomerPhone', defaultValue: '');
+    saleViewModel.selectedPaymentMethod = box.get('selectedPaymentMethod', defaultValue: 'Tiền mặt');
+  }
+
+  void _saveCheckoutData() {
+    final saleViewModel = Provider.of<SaleViewModel>(context);
+    final box = Hive.box('checkoutData');
+    box.put('selectedCustomerName', saleViewModel.selectedCustomerName);
+    box.put('selectedCustomerPhone', saleViewModel.selectedCustomerPhone);
+    box.put('selectedPaymentMethod', saleViewModel.selectedPaymentMethod);
+  }
+
+  @override
+  void dispose() {
+    Provider.of<SaleViewModel>(context, listen: false).searchCustomerController.dispose();
+    Hive.box('checkoutData').close();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+    maxWidth = MediaQuery.of(context).size.width;
   }
 
   @override
   Widget build(BuildContext context) {
     final saleViewModel = Provider.of<SaleViewModel>(context);
 
-    // saleViewModel.updateControllers();
-
     bool checkSelectedCustomer = saleViewModel.selectedCustomerName.isNotEmpty;
+
+    bool isChange = maxWidth > 1400;
 
     return Padding(
       padding: const EdgeInsets.all(15.0),
@@ -68,6 +103,7 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       Expanded(
                         child: TextFormField(
+                          cursorColor: Colors.blueAccent,
                           controller: saleViewModel.searchCustomerController,
                           onChanged: saleViewModel.onSearchCustomer,
                           readOnly: checkSelectedCustomer ? true : false,
@@ -77,10 +113,15 @@ class _CheckoutViewState extends State<CheckoutView> {
                             suffixIcon: saleViewModel.isCustomerSearching
                                 ? IconButton(
                                     icon: const Icon(Icons.clear),
-                                    onPressed: saleViewModel.clearCustomerSearch)
+                                    onPressed:
+                                        saleViewModel.clearCustomerSearch)
                                 : null,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                              borderRadius: BorderRadius.circular(10.0),
                             ),
                           ),
                         ),
@@ -95,7 +136,8 @@ class _CheckoutViewState extends State<CheckoutView> {
                     ],
                   ),
                   const SizedBox(height: 16.0),
-                  if (!saleViewModel.isCustomerSearching && saleViewModel.selectedCustomerName.isNotEmpty)
+                  if (!saleViewModel.isCustomerSearching &&
+                      saleViewModel.selectedCustomerName.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Container(
@@ -146,7 +188,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          showShipping(context, saleViewModel.shippingFeeController, (value) {
+                          showShipping(
+                              context, saleViewModel.shippingFeeController,
+                              (value) {
                             saleViewModel.updateShippingFee(value);
                           });
                         },
@@ -168,8 +212,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          showPromotion(context, saleViewModel.discountController,
-                              saleViewModel.totalAmount, saleViewModel.updatePromotion);
+                          showPromotion(
+                              context,
+                              saleViewModel.discountController,
+                              saleViewModel.totalAmount,
+                              saleViewModel.updatePromotion);
                         },
                         style: TextButton.styleFrom(
                             shape: RoundedRectangleBorder(
@@ -201,125 +248,286 @@ class _CheckoutViewState extends State<CheckoutView> {
                     child: ListView(
                       children: [
                         Column(
-                          children:
-                              List.generate(saleViewModel.paymentMethods.length, (index) {
+                          children: List.generate(
+                              saleViewModel.paymentMethods.length, (index) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                      child: DropdownButtonFormField<String>(
-                                    dropdownColor: Colors.white,
-                                    value: saleViewModel.paymentMethods[index].method,
-                                    items: [
-                                      {
-                                        "method": "Tiền mặt",
-                                        "image": logo_payment.cash
-                                      },
-                                      {
-                                        "method": "Thanh toán thẻ",
-                                        "image": logo_payment.visa_master
-                                      },
-                                      {
-                                        "method": "Chuyển khoản",
-                                        "image": logo_payment.bank
-                                      },
-                                      {
-                                        "method": "MoMo",
-                                        "image": logo_payment.momo
-                                      },
-                                      {
-                                        "method": "ZaloPay",
-                                        "image": logo_payment.zalopay
-                                      },
-                                      {
-                                        "method": "VNPay",
-                                        "image": logo_payment.vnpay
-                                      },
-                                    ]
-                                        .map((paymentMethod) =>
-                                            DropdownMenuItem<String>(
-                                              value: paymentMethod['method'],
-                                              child: Row(
-                                                children: [
-                                                  Image.asset(
-                                                    paymentMethod['image']!,
-                                                    width: 24,
-                                                    height: 24,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  // Text on the right
-                                                  Text(
-                                                      paymentMethod['method']!),
-                                                ],
+                              child: isChange
+                                  ? Row(
+                                      children: [
+                                        Expanded(
+                                            child:
+                                                DropdownButtonFormField<String>(
+                                          dropdownColor: Colors.white,
+                                          value: saleViewModel
+                                              .paymentMethods[index].method,
+                                          items: [
+                                            {
+                                              "method": "Tiền mặt",
+                                              "image": logo_payment.cash
+                                            },
+                                            {
+                                              "method": "Thanh toán thẻ",
+                                              "image": logo_payment.visa_master
+                                            },
+                                            {
+                                              "method": "Chuyển khoản",
+                                              "image": logo_payment.bank
+                                            },
+                                            {
+                                              "method": "MoMo",
+                                              "image": logo_payment.momo
+                                            },
+                                            {
+                                              "method": "ZaloPay",
+                                              "image": logo_payment.zalopay
+                                            },
+                                            {
+                                              "method": "VNPay",
+                                              "image": logo_payment.vnpay
+                                            },
+                                          ]
+                                              .map((paymentMethod) =>
+                                                  DropdownMenuItem<String>(
+                                                    value:
+                                                        paymentMethod['method'],
+                                                    child: Row(
+                                                      children: [
+                                                        Image.asset(
+                                                          paymentMethod[
+                                                              'image']!,
+                                                          width: 24,
+                                                          height: 24,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        // Text on the right
+                                                        Text(paymentMethod[
+                                                            'method']!),
+                                                      ],
+                                                    ),
+                                                  ))
+                                              .toList(),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              saleViewModel
+                                                  .updatePaymentMethod(value!);
+                                            });
+                                          },
+                                          decoration: InputDecoration(
+                                            fillColor: Colors.white,
+                                            filled: true,
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                              borderSide: const BorderSide(
+                                                  color: Colors.grey),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                              borderSide: const BorderSide(
+                                                  color: Colors.blue),
+                                            ),
+                                          ),
+                                        )),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: TextFormField(
+                                            cursorColor: Colors.blueAccent,
+                                            controller: saleViewModel
+                                                .customerPayController,
+                                            keyboardType: TextInputType.number,
+                                            onChanged: (value) {
+                                              setState(() {
+                                                saleViewModel.customerPay =
+                                                    double.tryParse(value) ?? 0;
+                                                saleViewModel
+                                                    .formatCustomerPayInput(
+                                                        saleViewModel
+                                                            .customerPayController
+                                                            .text);
+                                                saleViewModel.calculateChange();
+                                                saleViewModel
+                                                    .calculateActualReceived();
+                                                saleViewModel
+                                                    .updateActualReceived(
+                                                        value);
+                                                saleViewModel
+                                                    .updateReceivedMoney(value);
+                                                saleViewModel
+                                                    .updateCanProceedToPayment2(
+                                                        value.isNotEmpty &&
+                                                            saleViewModel
+                                                                    .customerPay >
+                                                                0);
+                                              });
+                                            },
+                                            decoration: InputDecoration(
+                                              hintText: saleViewModel
+                                                  .formatPrice(saleViewModel
+                                                      .calculateTotalDue()),
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                            ))
-                                        .toList(),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        saleViewModel.updatePaymentMethod(value!);
-                                      });
-                                    },
-                                    decoration: InputDecoration(
-                                      fillColor: Colors.white,
-                                      filled: true,
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                        borderSide: const BorderSide(
-                                            color: Colors.grey),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                        borderSide: const BorderSide(
-                                            color: Colors.blue),
-                                      ),
-                                    ),
-                                  )),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: TextFormField(
-                                      controller: saleViewModel.customerPayController,
-                                      keyboardType: TextInputType.number,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          saleViewModel.customerPay =
-                                              double.tryParse(value) ?? 0;
-                                          saleViewModel.formatCustomerPayInput(
-                                              saleViewModel.customerPayController.text);
-                                            saleViewModel.calculateChange();
-                                          saleViewModel.calculateActualReceived();
-                                          saleViewModel.updateActualReceived(value);
-                                          saleViewModel.updateReceivedMoney(value);
-                                          saleViewModel.updateCanProceedToPayment2(
-                                              value.isNotEmpty &&
-                                                  saleViewModel.customerPay > 0);
-                                        });
-                                      },
-                                      decoration: InputDecoration(
-                                        hintText:
-                                            saleViewModel.formatPrice(saleViewModel.calculateTotalDue()),
-                                        border: OutlineInputBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
+                                            ),
+                                          ),
                                         ),
+                                        saleViewModel.paymentMethods.length > 1
+                                            ? IconButton(
+                                                icon: const Icon(Icons.remove),
+                                                onPressed: () => saleViewModel
+                                                    .removePaymentMethod(index),
+                                              )
+                                            : const SizedBox.shrink(),
+                                      ],
+                                    )
+                                  : Container(
+                                height: 100,
+                                    child: Column(
+                                        children: [
+                                          Expanded(
+                                              child:
+                                                  DropdownButtonFormField<String>(
+                                            dropdownColor: Colors.white,
+                                            value: saleViewModel
+                                                .paymentMethods[index].method,
+                                            items: [
+                                              {
+                                                "method": "Tiền mặt",
+                                                "image": logo_payment.cash
+                                              },
+                                              {
+                                                "method": "Thanh toán thẻ",
+                                                "image": logo_payment.visa_master
+                                              },
+                                              {
+                                                "method": "Chuyển khoản",
+                                                "image": logo_payment.bank
+                                              },
+                                              {
+                                                "method": "MoMo",
+                                                "image": logo_payment.momo
+                                              },
+                                              {
+                                                "method": "ZaloPay",
+                                                "image": logo_payment.zalopay
+                                              },
+                                              {
+                                                "method": "VNPay",
+                                                "image": logo_payment.vnpay
+                                              },
+                                            ]
+                                                .map((paymentMethod) =>
+                                                    DropdownMenuItem<String>(
+                                                      value:
+                                                          paymentMethod['method'],
+                                                      child: Row(
+                                                        children: [
+                                                          Image.asset(
+                                                            paymentMethod[
+                                                                'image']!,
+                                                            width: 24,
+                                                            height: 24,
+                                                          ),
+                                                          const SizedBox(
+                                                              width: 8),
+                                                          // Text on the right
+                                                          Text(paymentMethod[
+                                                              'method']!),
+                                                        ],
+                                                      ),
+                                                    ))
+                                                .toList(),
+                                            onChanged: (value) {
+                                              setState(() {
+                                                saleViewModel
+                                                    .updatePaymentMethod(value!);
+                                              });
+                                            },
+                                            decoration: InputDecoration(
+                                              fillColor: Colors.white,
+                                              filled: true,
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                                borderSide: const BorderSide(
+                                                    color: Colors.grey),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                                borderSide: const BorderSide(
+                                                    color: Colors.blue),
+                                              ),
+                                            ),
+                                          )),
+                                          const SizedBox(height: 15),
+                                          Expanded(
+                                            child: TextFormField(
+                                              cursorColor: Colors.blueAccent,
+                                              controller: saleViewModel
+                                                  .customerPayController,
+                                              keyboardType: TextInputType.number,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  saleViewModel.customerPay =
+                                                      double.tryParse(value) ?? 0;
+                                                  saleViewModel
+                                                      .formatCustomerPayInput(
+                                                          saleViewModel
+                                                              .customerPayController
+                                                              .text);
+                                                  saleViewModel.calculateChange();
+                                                  saleViewModel
+                                                      .calculateActualReceived();
+                                                  saleViewModel
+                                                      .updateActualReceived(
+                                                          value);
+                                                  saleViewModel
+                                                      .updateReceivedMoney(value);
+                                                  saleViewModel
+                                                      .updateCanProceedToPayment2(
+                                                          value.isNotEmpty &&
+                                                              saleViewModel
+                                                                      .customerPay >
+                                                                  0);
+                                                });
+                                              },
+                                              decoration: InputDecoration(
+                                                hintText: saleViewModel
+                                                    .formatPrice(saleViewModel
+                                                        .calculateTotalDue()),
+                                                border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                focusedBorder: OutlineInputBorder(
+                                                  borderSide: const BorderSide(color: Colors.blueAccent, width: 2),
+                                                  borderRadius: BorderRadius.circular(10.0),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          saleViewModel.paymentMethods.length > 1
+                                              ? IconButton(
+                                                  icon: const Icon(Icons.remove),
+                                                  onPressed: () => saleViewModel
+                                                      .removePaymentMethod(index),
+                                                )
+                                              : const SizedBox.shrink(),
+                                        ],
                                       ),
-                                    ),
                                   ),
-                                  saleViewModel.paymentMethods.length > 1
-                                      ? IconButton(
-                                          icon: const Icon(Icons.remove),
-                                          onPressed: () =>
-                                              saleViewModel.removePaymentMethod(index),
-                                        )
-                                      : const SizedBox.shrink(),
-                                ],
-                              ),
                             );
                           }),
                         ),
@@ -335,7 +543,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: AppColors.titleColor)),
-                      Text(saleViewModel.formatCustomerPayInput(saleViewModel.customerPayController.text),
+                      Text(
+                          saleViewModel.formatCustomerPayInput(
+                              saleViewModel.customerPayController.text),
                           style: const TextStyle(
                               fontSize: 20, fontWeight: FontWeight.bold)),
                     ],
@@ -382,8 +592,8 @@ class _CheckoutViewState extends State<CheckoutView> {
                           child: ListView.builder(
                             itemCount: saleViewModel.filteredCustomers.length,
                             itemBuilder: (context, customerIndex) {
-                              final customer =
-                                  saleViewModel.filteredCustomers[customerIndex];
+                              final customer = saleViewModel
+                                  .filteredCustomers[customerIndex];
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor: Colors.blueAccent,

@@ -25,14 +25,23 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
   String searchQuery = "";
 
   List<Order> get filteredOrders {
+    final saleHistoryModel = Provider.of<SaleHistoryModel>(context, listen: false);
     if (searchQuery.isEmpty) {
       return widget.orders;
     }
+    final lowerQuery = searchQuery.toLowerCase();
     return widget.orders.where((order) {
-      return order.id.toLowerCase().contains(searchQuery.toLowerCase()) ||
-          order.cid.toLowerCase().contains(searchQuery.toLowerCase());
+      final orderIdMatch = order.id.toLowerCase().contains(lowerQuery);
+
+      final customer = saleHistoryModel.getCustomerById(order.cid);
+      final phoneMatch = customer != null && customer.phone.toLowerCase().contains(lowerQuery);
+
+      final nameMatch = customer != null && customer.name.toLowerCase().contains(lowerQuery);
+
+      return orderIdMatch || phoneMatch || nameMatch;
     }).toList();
   }
+
 
   DateTime? startDate1, endDate1;
 
