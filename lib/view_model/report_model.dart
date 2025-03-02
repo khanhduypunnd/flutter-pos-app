@@ -57,8 +57,8 @@ class ReportModel extends ChangeNotifier {
         List<Order> filteredOrders = allOrders.where((order) {
           DateTime orderDate =
           DateTime(order.date.year, order.date.month, order.date.day);
-          return orderDate.isAfter(start.subtract(Duration(days: 1))) &&
-              orderDate.isBefore(end.add(Duration(days: 1))) &&
+          return orderDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+              orderDate.isBefore(endDate.add(Duration(days: 1))) &&
               order.channel == "store";
         }).toList();
 

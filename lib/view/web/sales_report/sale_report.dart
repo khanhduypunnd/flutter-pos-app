@@ -40,9 +40,7 @@ class _SaleReportState extends State<SaleReport> {
     });
     final reportModel = Provider.of<ReportModel>(context, listen: false);
     if (start != null && end != null) {
-      print("Ngày được chọn: $start - $end");
       reportModel.fetchOrdersStore(start, end);
-      print(reportModel.listOrdersStore);
     }
   }
 
@@ -83,7 +81,6 @@ class _SaleReportState extends State<SaleReport> {
         ? List<int>.from(widget.staffData!['role_detail'])
         : null;
 
-    print(widget.staffData?['role_detail']);
     bool canAccessSalesReport = roleDetail == null ||
         roleDetail.isEmpty ||
         roleDetail[roleDetail.length - 2] == 0;

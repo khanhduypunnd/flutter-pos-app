@@ -74,8 +74,8 @@ class SaleHistoryModel extends ChangeNotifier {
         List<Order> filteredOrders = allOrders.where((order) {
           DateTime orderDate =
           DateTime(order.date.year, order.date.month, order.date.day);
-          return orderDate.isAfter(start.subtract(Duration(days: 1))) &&
-              orderDate.isBefore(end.add(Duration(days: 1))) &&
+          return orderDate.isAfter(startDate.subtract(Duration(days: 1))) &&
+              orderDate.isBefore(endDate.add(Duration(days: 1))) &&
               order.channel == "store";
         }).toList();
 
@@ -120,9 +120,6 @@ class SaleHistoryModel extends ChangeNotifier {
         for (var order in allOrders) {
           DateTime orderDate =
           DateTime(order.date.year, order.date.month, order.date.day);
-
-          print("Checking order: ${order.id}, Status: ${order.status}, Channel: ${order.channel}");
-
 
           if (order.channel == "Online") {
             switch (order.status) {
@@ -457,6 +454,4 @@ class SaleHistoryModel extends ChangeNotifier {
       print('Lỗi khi cập nhật số lượng sản phẩm: $error');
     }
   }
-
-
 }

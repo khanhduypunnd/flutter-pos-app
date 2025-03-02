@@ -79,7 +79,7 @@ class _TimeSelectionContainerState extends State<TimeSelection> {
         break;
       case '7 ngày trước':
         startDate = today.subtract(Duration(days: 7));
-        endDate = today.subtract(Duration(days: 1));
+        endDate = today;
         break;
       case 'Tháng này':
         startDate = DateTime(today.year, today.month, 1);
