@@ -21,6 +21,8 @@ class ReportModel extends ChangeNotifier {
   bool _isLoading = false;
   bool hasFetched = false;
 
+
+
   Customer? getCustomerById(String cid) {
     try {
       return _customers.firstWhere((customer) => customer.id == cid, orElse: () => Customer(id: '', name: 'Không xác định', phone: '', dob: DateTime.now(), address: '', email: '', pass: ''));
@@ -173,6 +175,32 @@ class ReportModel extends ChangeNotifier {
               .fold(0, (orderSum, detail) => orderSum + detail.quantity);
     });
   }
+
+  double getTotalProfit() {
+    double totalProfit = 0.0;
+
+    for (var order in listOrdersStore) {
+      for (var detail in order.orderDetails) {
+        Product? product = getProductById(detail.productId);
+        if (product == null) continue;
+
+        int sizeIndex = product.sizes.indexOf(detail.size);
+        if (sizeIndex == -1 ||
+            sizeIndex >= product.actualPrices.length ||
+            sizeIndex >= product.sellPrices.length) continue;
+
+        double actualPrice = product.actualPrices[sizeIndex];
+        double sellPrice = product.sellPrices[sizeIndex];
+
+        double profit = (sellPrice - actualPrice) * detail.quantity;
+
+        totalProfit += profit;
+      }
+    }
+    return totalProfit;
+  }
+
+
 
   List<FlSpot> getNetRevenueSpots() {
     return _getSpotsByHour((order) => order.totalPrice);

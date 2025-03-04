@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 import '../model/customer.dart';
 import '../model/order.dart';
@@ -453,5 +454,16 @@ class SaleHistoryModel extends ChangeNotifier {
     } catch (error) {
       print('Lỗi khi cập nhật số lượng sản phẩm: $error');
     }
+  }
+
+
+  String formatPriceDouble(double price) {
+    final format = NumberFormat("#,##0", "en_US");
+    return format.format(price);
+  }
+
+  String formatPriceInt(int price) {
+    final format = NumberFormat("#,##0", "en_US");
+    return format.format(price);
   }
 }

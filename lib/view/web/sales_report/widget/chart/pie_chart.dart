@@ -83,21 +83,21 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
                       2: FlexColumnWidth(1),
                     },
                     children: [
-                      TableRow(
-                        decoration: BoxDecoration(color: Colors.grey[300]),
-                        children: const [
+                      const TableRow(
+                        decoration: BoxDecoration(color: Colors.blueAccent),
+                        children: [
                           Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
                               "Phương thức thanh toán",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
                             ),
                           ),
                           Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
                               "Thực nhận",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.white),
                             ),
                           ),
                         ],
@@ -112,7 +112,7 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text("${entry.value ~/ 2}"),
+                              child: Text("${reportModel.formatCurrencyDouble(entry.value)} đ", style: const TextStyle(fontSize: 18),),
                             ),
                           ],
                         );
@@ -197,7 +197,7 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
-                                  child: Text("${reportModel.formatCurrencyInt(entry.value ~/ 2)}"),
+                                  child: Text("${reportModel.formatCurrencyDouble(entry.value)} đ", style: const TextStyle(fontSize: 18),),
                                 ),
                               ],
                             );
@@ -270,8 +270,8 @@ class _InteractivePieChartState extends State<InteractivePieChart> {
       case "Chuyển khoản":
         return Colors.indigoAccent.shade400;
       case "Momo":
-        return Colors.purple.shade700;
-      case "Visa/Master":
+        return Colors.purple;
+      case "Thanh toán thẻ":
         return Colors.orange.shade800;
       case "ZaloPay":
         return Colors.blueAccent.shade400;

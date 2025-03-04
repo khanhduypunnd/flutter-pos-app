@@ -120,6 +120,7 @@ class _SaleReportState extends State<SaleReport> {
                     netRevenue: reportModel.formatCurrencyDouble(reportModel.netRevenue),
                     totalReceived: reportModel.formatCurrencyDouble(reportModel.totalReceived),
                     actualRevenue: reportModel.formatCurrencyDouble(reportModel.actualRevenue),
+                    totalProfit: reportModel.formatCurrencyDouble(reportModel.getTotalProfit()),
                     totalOrders: reportModel.formatCurrencyInt(reportModel.totalOrders),
                     totalProducts: reportModel.formatCurrencyInt(reportModel.totalProducts),
                   );
@@ -279,13 +280,15 @@ class _SaleReportState extends State<SaleReport> {
     required String netRevenue,
     required String totalReceived,
     required String actualRevenue,
+    required String totalProfit,
     required String totalOrders,
     required String totalProducts,
   }) {
     List<Widget> cards = [
       _buildCardWithSideColor('Doanh thu thuần', netRevenue, Colors.blue),
       _buildCardWithSideColor('Đã thu', totalReceived, Colors.cyan),
-      _buildCardWithSideColor('Thực nhận', actualRevenue, Colors.pink),
+      _buildCardWithSideColor('Thực nhận', actualRevenue, Colors.teal),
+      _buildCardWithSideColor('Lợi nhuận', totalProfit, Colors.pink),
       _buildCardWithSideColor('Đơn hàng', totalOrders, Colors.purple),
       _buildCardWithSideColor('Sản phẩm', totalProducts, Colors.red),
     ];

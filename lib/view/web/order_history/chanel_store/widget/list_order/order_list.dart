@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../../../../model/order.dart';
 import '../../../../../../shared/core/theme/colors.dart';
@@ -25,7 +26,8 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
   String searchQuery = "";
 
   List<Order> get filteredOrders {
-    final saleHistoryModel = Provider.of<SaleHistoryModel>(context, listen: false);
+    final saleHistoryModel =
+        Provider.of<SaleHistoryModel>(context, listen: false);
     if (searchQuery.isEmpty) {
       return widget.orders;
     }
@@ -34,14 +36,15 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
       final orderIdMatch = order.id.toLowerCase().contains(lowerQuery);
 
       final customer = saleHistoryModel.getCustomerById(order.cid);
-      final phoneMatch = customer != null && customer.phone.toLowerCase().contains(lowerQuery);
+      final phoneMatch =
+          customer != null && customer.phone.toLowerCase().contains(lowerQuery);
 
-      final nameMatch = customer != null && customer.name.toLowerCase().contains(lowerQuery);
+      final nameMatch =
+          customer != null && customer.name.toLowerCase().contains(lowerQuery);
 
       return orderIdMatch || phoneMatch || nameMatch;
     }).toList();
   }
-
 
   DateTime? startDate1, endDate1;
 
@@ -51,17 +54,22 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
       endDate1 = end ?? DateTime.now();
     });
 
-    final saleHistoryModel = Provider.of<SaleHistoryModel>(context, listen: false);
+    final saleHistoryModel =
+        Provider.of<SaleHistoryModel>(context, listen: false);
     saleHistoryModel.fetchOrdersStore(startDate1!, endDate1!);
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final saleHistoryModel = Provider.of<SaleHistoryModel>(context);
+
     return Column(
       children: [
         Container(
-            width: MediaQuery.of(context).size.width, child: TimeSelection(onDateSelected: _onDateSelected,)),
+            width: MediaQuery.of(context).size.width,
+            child: TimeSelection(
+              onDateSelected: _onDateSelected,
+            )),
         SizedBox(
           height: 10,
         ),
@@ -90,11 +98,11 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : Colors.blue[10],
+                    color: isSelected ? Colors.blue[100] : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isSelected ? Colors.blue : AppColors.titleColor,
-                      width: 1,
+                      color: isSelected ? AppColors.titleColor : Colors.blue,
+                      width: 1.5,
                     ),
                   ),
                   child: Row(
@@ -102,18 +110,21 @@ class _OrderListScreenStoreState extends State<OrderListScreenStore> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(order.date.toString(),
-                              style: const TextStyle(fontSize: 15)),
+                          Text(
+                              DateFormat("yyyy-MM-dd HH:mm:ss")
+                                  .format(order.date),
+                              style: const TextStyle(fontSize: 18)),
                           Text(order.id,
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: AppColors.titleColor)),
-                          Text(order.cid),
+                                  color: AppColors.titleColor,
+                                  fontSize: 18)),
+                          Text(order.cid, style: const TextStyle(fontSize: 18)),
                         ],
                       ),
                       const Spacer(),
-                      Text(order.totalPrice.toString(),
-                          style: const TextStyle(fontSize: 15)),
+                      Text(saleHistoryModel.formatPriceDouble(order.totalPrice),
+                          style: const TextStyle(fontSize: 18)),
                     ],
                   ),
                 ),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../../../../model/customer.dart';
 import '../../../../../../model/order.dart';
-import '../../../../../../model/product.dart';
 import '../../../../../../shared/core/theme/colors.dart';
 import 'dart:math';
 
@@ -26,15 +25,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         Text(
           title,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: title == 'Tổng tiền phải thanh toán' ? 20 : 19,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: title == 'Tổng tiền phải thanh toán' ? Colors.blue[800] : Colors.black,
           ),
         ),
         Text(
           value,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: title == 'Tổng tiền phải thanh toán' ? 20 : 19,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: title == 'Tổng tiền phải thanh toán' ? Colors.blue[800] : Colors.black,
           ),
         ),
       ],
@@ -75,51 +76,58 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Đơn hàng: ${widget.order.id}',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Ngày đặt: ${widget.order.date}',
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ],
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[200],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Đơn hàng: ${widget.order.id}',
+                            style: const TextStyle(
+                                fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.titleColor),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Ngày đặt: ${DateFormat("yyyy-MM-dd HH:mm:ss").format(widget.order.date)}',
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Khách hàng: ${customer?.name}',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'SĐT: ${customer?.phone}',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Khách hàng: ${customer?.name ?? "Không rõ"}',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w500),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'SĐT: ${customer?.phone ?? "Không rõ"}',
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const Divider(height: 20),
-              Text(
+              const Text(
                 'Chi tiết sản phẩm',
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               Expanded(
@@ -130,9 +138,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     final product = saleHistoryModel.getProductById(item.productId);
                     return ListTile(
                       leading: const Icon(Icons.inventory),
-                      title: Text(product?.name ?? "Tên sản phẩm không xác định"),
-                      subtitle: Text('Size: ${item.size} - Số lượng: ${item.quantity}'),
-                      trailing: Text('${item.price}đ'),
+                      title: Text(product?.name ?? "Tên sản phẩm không xác định", style: const TextStyle(fontSize: 18),),
+                      subtitle: Text('Size: ${item.size} - Số lượng: ${item.quantity}', style: const TextStyle(fontSize: 18),),
+                      trailing: Text('${saleHistoryModel.formatPriceDouble(item.price)}đ', style: const TextStyle(fontSize: 18),),
                     );
                   },
                 ),
@@ -144,17 +152,17 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPaymentDetail('Kênh', widget.order.channel),
-                    _buildPaymentDetail('Tổng tiền hàng', widget.order.totalPrice.toString()),
-                    _buildPaymentDetail('Phí vận chuyển', widget.order.deliveryFee.toString()),
-                    _buildPaymentDetail('Giảm giá', widget.order.discount.toString()),
+                    _buildPaymentDetail('Tổng tiền hàng', saleHistoryModel.formatPriceDouble(widget.order.totalPrice)),
+                    _buildPaymentDetail('Phí vận chuyển', saleHistoryModel.formatPriceDouble(widget.order.deliveryFee)),
+                    _buildPaymentDetail('Giảm giá', saleHistoryModel.formatPriceDouble(widget.order.discount)),
                     const SizedBox(height: 8),
-                    _buildPaymentDetail('Tổng tiền phải thanh toán', widget.order.receivedMoney.toString(),
+                    _buildPaymentDetail('Tổng tiền phải thanh toán', saleHistoryModel.formatPriceDouble(widget.order.receivedMoney),
                         isBold: true),
                     const SizedBox(height: 8),
                     _buildPaymentDetail('Phương thức thanh toán', widget.order.paymentMethod),
                     const Divider(height: 20),
-                    const Text('Ghi chú:', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                    Text(widget.order.note.isNotEmpty ? widget.order.note : 'Không có ghi chú.', style: TextStyle(fontSize: 14)),
+                    const Text('Ghi chú:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(widget.order.note.isNotEmpty ? widget.order.note : 'Không có ghi chú.', style: const TextStyle(fontSize: 18)),
                   ],
                 ),
               ),

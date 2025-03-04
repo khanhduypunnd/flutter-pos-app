@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../../../../model/order.dart';
 import '../../../../../../view_model/sale_history_model.dart';
@@ -139,11 +140,11 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.blue[50] : Colors.white,
+                    color: isSelected ? Colors.blue[100] : Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: isSelected ? Colors.blue : AppColors.titleColor,
-                      width: 1,
+                      color: isSelected ? AppColors.titleColor : Colors.blue,
+                      width: 1.5,
                     ),
                   ),
                   child: Row(
@@ -151,13 +152,13 @@ class _OrderListScreenWebState extends State<OrderListScreenWeb> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(order.date.toString(), style: const TextStyle(fontSize: 15)),
-                          Text(order.id, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.titleColor)),
-                          Text(order.cid),
+                          Text(DateFormat("yyyy-MM-dd HH:mm:ss").format(order.date), style: const TextStyle(fontSize: 18)),
+                          Text(order.id, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.titleColor, fontSize: 18)),
+                          Text(order.cid, style: const TextStyle(fontSize: 18),),
                         ],
                       ),
                       const Spacer(),
-                      Text(order.totalPrice.toString(), style: const TextStyle(fontSize: 15)),
+                      Text(saleHistoryModel.formatPriceDouble(order.totalPrice), style: const TextStyle(fontSize: 18)),
                     ],
                   ),
                 ),
