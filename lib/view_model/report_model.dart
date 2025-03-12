@@ -21,8 +21,6 @@ class ReportModel extends ChangeNotifier {
   bool _isLoading = false;
   bool hasFetched = false;
 
-
-
   Customer? getCustomerById(String cid) {
     try {
       return _customers.firstWhere((customer) => customer.id == cid, orElse: () => Customer(id: '', name: 'Không xác định', phone: '', dob: DateTime.now(), address: '', email: '', pass: ''));
@@ -30,7 +28,6 @@ class ReportModel extends ChangeNotifier {
       return null; 
     }
   }
-
 
   Product? getProductById(String productId) {
     return _allProducts.firstWhere((product) => product.id == productId);
@@ -199,7 +196,6 @@ class ReportModel extends ChangeNotifier {
     }
     return totalProfit;
   }
-
 
 
   List<FlSpot> getNetRevenueSpots() {
